@@ -1,0 +1,13 @@
+ArchUnitRust
+Copyright (c) 2026 Chris Woodruff
+
+This product is a Rust port of the concepts, API design, rule semantics and report
+formats of ArchUnit (https://www.archunit.org, https://github.com/TNG/ArchUnit),
+Copyright (c) TNG Technology Consulting GmbH and contributors, licensed under the
+Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
+
+No Java source code from ArchUnit is included. Names of types, methods, rules,
+configuration keys and the wording of rule descriptions and failure messages are
+reproduced so that ArchUnit's documentation applies to this library.
+
+This product is licensed under the Apache License, Version 2.0; see LICENSE.
