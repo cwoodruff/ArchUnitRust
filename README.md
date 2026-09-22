@@ -190,6 +190,20 @@ onion_architecture()
     .adapter("persistence", &["..adapter.persistence.."]);
 ```
 
+A modular monolith (a Rust-only builder in the same style; ArchUnit's `library.modules` API
+covers the same checks one rule at a time):
+
+```rust
+modular_monolith()
+    .module("orders").defined_by(&["..orders.."])
+    .module("billing").defined_by(&["..billing.."])
+    .module("shared").defined_by(&["..shared.."])
+    .where_module("shared").may_not_depend_on_any_module()
+    .where_module("billing").may_only_depend_on_modules(&["shared"])
+    .modules_may_only_depend_on_each_other_through_packages(&["..api.."])
+    .modules_should_be_free_of_cycles();
+```
+
 Slices and cycles:
 
 ```java
@@ -222,8 +236,9 @@ NO_CLASSES_SHOULD_ACCESS_STANDARD_STREAMS.check(&items);
 
 Rust-only additions keep the ArchUnit style and are marked `[rust-only]` in the mapping:
 `NO_CLASSES_SHOULD_CALL_UNWRAP`, `NO_CLASSES_SHOULD_PANIC`,
-`NO_LIBRARY_CODE_SHOULD_CALL_PROCESS_EXIT`, `NO_CLASSES_SHOULD_USE_UNSAFE`, the `imports`
-dependency of a module, `reside_in_crate`, and more.
+`NO_LIBRARY_CODE_SHOULD_CALL_PROCESS_EXIT`, `NO_CLASSES_SHOULD_USE_UNSAFE`, the
+`modular_monolith()` architecture, the `imports` dependency of a module, `reside_in_crate`,
+and more.
 
 ## Configuration
 

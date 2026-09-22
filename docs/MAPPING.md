@@ -577,6 +577,11 @@ Examples the tests must reproduce verbatim:
 | `as(..)` / `because(..)` / `allowEmptyShould(..)` / `check` / `evaluate` / `getDescription` | same | done | `because` returns `Box<dyn ArchRule>` as in Java; `as_`/`allow_empty_should` keep the concrete type |
 | description text | identical: `Layered architecture considering all dependencies, consisting of\nlayer 'X' ('..x..')\nwhere layer 'X' may only be accessed by layers ['Y']` | done | `Class <x> is not contained in architecture` becomes `Item <x> is not contained in architecture` |
 | `Architectures.onionArchitecture()` | `Architectures::onion_architecture()` | done | |
+| `[rust-only]` | `Architectures::modular_monolith()` / `modular_monolith()` → `ModularMonolithArchitecture` | done | ArchUnit has no modular-monolith builder; its `library.modules` API (§5.3, deferred) covers the same checks one rule at a time. The builder bundles them in the layered/onion style |
+| `[rust-only]` | `.module(name).defined_by(&[&str])` / `.defined_by_with(pred)`, `.optional_module(name)`, `.modules_defined_by_packages("..app.(*)..")` (ArchUnit `modules().definedByPackages`), `.naming_modules("$1")` (`derivingNameFromPattern`) | done | An item belongs to the first matching explicit module, else to the module derived from the package pattern |
+| `[rust-only]` | `.where_module(name).may_only_depend_on_modules(..)` / `.may_not_depend_on_any_module()` / `.may_only_be_depended_on_by_modules(..)` / `.may_not_be_depended_on_by_any_module()` | done | Mirrors `where_layer(..)`; names are validated eagerly unless the modules come from a package pattern |
+| `[rust-only]` | `.modules_may_only_depend_on_each_other_through_items_that(pred)` / `.modules_may_only_depend_on_each_other_through_packages(&[".. api.."])` (ArchUnit `onlyDependOnEachOtherThroughClassesThat` / `..ThroughPackagesDeclaredIn`), `.modules_should_be_free_of_cycles()` (`beFreeOfCycles`) | done | Cycles are reported with the `Cycle detected: Module 'a' -> ..` format of the slice rules |
+| `[rust-only]` | `ignore_dependency(..)` / `ignore_dependency_where(..)`, `with_optional_modules(..)`, `ensure_all_classes_are_contained_in_architecture[_ignoring[_with]]`, `as_`, `because`, `allow_empty_should`, `check`, `evaluate`, `description` | done | Only dependencies between items of different modules count (like `considering_only_dependencies_in_layers()`); `std`, other crates and items outside every module are irrelevant. Description: `Modular monolith consisting of\nmodule 'orders' ('..orders..')\nwhere module 'billing' may only depend on modules ['shared']\nwhere modules may only depend on each other through items that ..\nwhere modules should be free of cycles`; empty modules report `Module '<name>' is empty` |
 | `.domainModels(..)` / `.domainServices(..)` / `.applicationServices(..)` / `.adapter(name, ..)` (String... and pred overloads) | same (`_with` for pred) | done | |
 | `withOptionalLayers`, `ignoreDependency` (3), `ensureAllClassesAreContainedInArchitecture[Ignoring]`, `as`, `because`, `allowEmptyShould`, `check`, `evaluate`, `getDescription` | same | done | `layered_architecture_delegate()` exposes the equivalent `LayeredArchitecture` |
 
@@ -724,6 +729,7 @@ named `harness`; every annotation keeps its ArchUnit name.
 | `ThirdPartyRulesTest` | `examples/third_party_rules.rs` (custom `ArchCondition` with `never(call_code_unit_where(..))`) | done |
 | `SecurityTest` | `examples/security.rs` (`only_be_accessed().by_any_package(..)` on the `security` module; no `java.security` equivalent to import) | partial |
 | `SessionBeanRulesTest` | — | unsupported: no EJB session beans in Rust |
+| `[rust-only]` modular monolith | `examples/modular_monolith.rs` against `tests/fixtures/modular_app` | done |
 | `ModulesTest` | — | deferred with §5.3 |
 | `ArchUnitExampleJUnit5ArchitectureTest`, `RuleSetsTest`, `RuleLibraryTest` (`@AnalyzeClasses` + `ArchTests.in`) | `examples/architecture_test.rs` using `#[analyze_classes]`, `#[arch_rules]` and `ArchTests::in_(..)` | done |
 | `extension` example (`ArchUnitExtension`) | — | deferred |
@@ -892,6 +898,19 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
   not applied.
 * README shows the Java and Rust forms side by side and links here for every difference.
 
+### After Phase 6: modular monolith
+
+* `Architectures::modular_monolith()` is a `[rust-only]` builder requested after the port was
+  complete. It reuses the slice machinery for cycle detection (a `SliceAssignment` from the
+  module assignment, named `Module '$1'`) and the `only_have_dependencies_where` /
+  `only_have_dependents_where` conditions for the per-module constraints, so its reports have
+  the same shape as the layered architecture and slice rules. The `library.modules` API stays
+  deferred; if it is ported later the builder should delegate to it.
+* As with the layered architecture, module items (which carry the `use` dependencies) are in
+  the module their path matches, but `classes()` never yields them, so the origin-side
+  constraints (`may only depend on ..`, `through items that ..`) do not report imports; the
+  target-side constraints and the cycle detection do.
+
 ## 10. Phase status log
 
 | Phase | Status | Summary |
@@ -902,4 +921,4 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 | 3 | done | `library::architectures` (layered + onion), `library::dependencies` (slices, `be_free_of_cycles`, `not_depend_on_each_other`, `ignore_dependency`), `library::cycle_detection` (Johnson/Tarjan port, `CycleArchCondition`), cycle configuration properties; 24 library tests incl. golden reports for layered, onion, simple cycle, simple scenario and controller slices |
 | 4 | done | `archunit-macros` (`#[analyze_classes]`, `#[arch_test]`, `#[arch_rules]`, `#[arch_ignore]`, `#[arch_tag]`), `archunit::harness` (`analyze_classes()` builder, `CacheMode`, `LocationProvider`, `ArchTests`, cache), `archunit.toml` + `ARCHUNIT_*` overrides with importer settings; 11 harness tests (macro-generated) + 5 config tests |
 | 5 | done | `library::general_coding_rules` (standard streams, generic exceptions, assertions, deprecated API + rust-only unwrap/panic/process-exit/unsafe), `dependency_rules`, `proxy_rules`, `library::plantuml` (parser + `adhere_to_plant_uml_diagram`), `library::freeze` (`FreezingArchRule`, `TextFileBasedViolationStore` in Java's format, fuzzy line matcher); fixture `coding_app` and diagram `plantuml/layered_app.puml`; 8 coding-rule, 7 PlantUML and 15 freeze tests with 11 golden reports |
-| 6 | done | 18 example programs porting `archunit-example` (60 rules with expected reports under `examples/expected/`, frozen store under `examples/frozen/`), `#[analyze_classes]` harness example, README with Java/Rust side by side |
+| 6 | done | 19 example programs porting `archunit-example` (60 rules with expected reports under `examples/expected/`, frozen store under `examples/frozen/`), `#[analyze_classes]` harness example, README with Java/Rust side by side |

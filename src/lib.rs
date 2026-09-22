@@ -39,6 +39,6 @@ pub mod prelude {
     };
     pub use crate::library::{
         Architectures, FreezingArchRule, SlicesRuleDefinition, adhere_to_plant_uml_diagram, freeze,
-        layered_architecture, onion_architecture, slices,
+        layered_architecture, modular_monolith, onion_architecture, slices,
     };
 }

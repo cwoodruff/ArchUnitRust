@@ -50,6 +50,12 @@ impl Architectures {
     pub fn onion_architecture() -> OnionArchitecture {
         OnionArchitecture::new()
     }
+
+    /// `[rust-only]` A modular monolith, see
+    /// [`modular_monolith`](mod@crate::library::modular_monolith).
+    pub fn modular_monolith() -> super::modular_monolith::ModularMonolithArchitecture {
+        super::modular_monolith::ModularMonolithArchitecture::new()
+    }
 }
 
 /// `Architectures.layeredArchitecture()`.

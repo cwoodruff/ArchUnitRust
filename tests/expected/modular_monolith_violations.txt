@@ -1,0 +1,23 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'Modular monolith consisting of
+module 'orders' ('..orders..')
+module 'billing' ('..billing..')
+module 'inventory' ('..inventory..')
+module 'shared' ('..shared..')
+where module 'shared' may not depend on any module
+where module 'billing' may only depend on modules ['shared']
+where module 'inventory' may only depend on modules ['shared']
+where modules may only depend on each other through items that reside in any package ['..api..']
+where modules should be free of cycles' was violated (4 times):
+Cycle detected: Module 'billing' -> 
+                Module 'orders' -> 
+                Module 'billing'
+  1. Dependencies of Module 'billing'
+    - Method <modular_app::billing::internal::Ledger::settle(&OrderService)> has parameter of type <modular_app::orders::api::OrderService> in (src/billing/internal.rs:14)
+  2. Dependencies of Module 'orders'
+    - Method <modular_app::orders::api::OrderService::peek_ledger(&Ledger)> calls method <modular_app::billing::internal::Ledger::balance()> in (src/orders/api.rs:25)
+    - Method <modular_app::orders::api::OrderService::peek_ledger(&Ledger)> has parameter of type <modular_app::billing::internal::Ledger> in (src/orders/api.rs:24)
+    - Method <modular_app::orders::api::OrderService::place(Order)> calls constructor <modular_app::billing::api::Invoice::for_order(u64, Money)> in (src/orders/api.rs:20)
+    - Method <modular_app::orders::api::OrderService::place(Order)> has return type <modular_app::billing::api::Invoice> in (src/orders/api.rs:18)
+Method <modular_app::billing::internal::Ledger::settle(&OrderService)> has parameter of type <modular_app::orders::api::OrderService> in (src/billing/internal.rs:14)
+Method <modular_app::orders::api::OrderService::peek_ledger(&Ledger)> calls method <modular_app::billing::internal::Ledger::balance()> in (src/orders/api.rs:25)
+Method <modular_app::orders::api::OrderService::peek_ledger(&Ledger)> has parameter of type <modular_app::billing::internal::Ledger> in (src/orders/api.rs:24)
