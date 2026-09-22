@@ -1,0 +1,22 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'slices matching '..simplecycle.(*)..' should be free of cycles' was violated (2 times):
+Cycle detected: Slice slice1 -> 
+                Slice slice2 -> 
+                Slice slice3 -> 
+                Slice slice1
+  1. Dependencies of Slice slice1
+    - Method <cyclic_app::simplecycle::slice1::SliceOneCallingMethodInSliceTwo::call_slice_two(&SliceTwoCallingMethodOfSliceThree)> calls method <cyclic_app::simplecycle::slice2::SliceTwoCallingMethodOfSliceThree::call_slice_three()> in (src/simplecycle/slice1.rs:7)
+    - Method <cyclic_app::simplecycle::slice1::SliceOneCallingMethodInSliceTwo::call_slice_two(&SliceTwoCallingMethodOfSliceThree)> has parameter of type <cyclic_app::simplecycle::slice2::SliceTwoCallingMethodOfSliceThree> in (src/simplecycle/slice1.rs:6)
+  2. Dependencies of Slice slice2
+    - Method <cyclic_app::simplecycle::slice2::SliceTwoCallingMethodOfSliceThree::call_slice_three()> calls constructor <cyclic_app::simplecycle::slice3::SliceThreeCallingMethodOfSliceOne> in (src/simplecycle/slice2.rs:7)
+    - Method <cyclic_app::simplecycle::slice2::SliceTwoCallingMethodOfSliceThree::call_slice_three()> calls method <cyclic_app::simplecycle::slice3::SliceThreeCallingMethodOfSliceOne::call_slice_one()> in (src/simplecycle/slice2.rs:7)
+  3. Dependencies of Slice slice3
+    - Method <cyclic_app::simplecycle::slice3::SliceThreeCallingMethodOfSliceOne::call_slice_one()> calls constructor <cyclic_app::simplecycle::slice1::SliceOneCallingMethodInSliceTwo> in (src/simplecycle/slice3.rs:7)
+    - Method <cyclic_app::simplecycle::slice3::SliceThreeCallingMethodOfSliceOne::call_slice_one()> calls method <cyclic_app::simplecycle::slice1::SliceOneCallingMethodInSliceTwo::call_slice_two(&SliceTwoCallingMethodOfSliceThree)> in (src/simplecycle/slice3.rs:8)
+Cycle detected: Slice slice2 -> 
+                Slice slice3 -> 
+                Slice slice2
+  1. Dependencies of Slice slice2
+    - Method <cyclic_app::simplecycle::slice2::SliceTwoCallingMethodOfSliceThree::call_slice_three()> calls constructor <cyclic_app::simplecycle::slice3::SliceThreeCallingMethodOfSliceOne> in (src/simplecycle/slice2.rs:7)
+    - Method <cyclic_app::simplecycle::slice2::SliceTwoCallingMethodOfSliceThree::call_slice_three()> calls method <cyclic_app::simplecycle::slice3::SliceThreeCallingMethodOfSliceOne::call_slice_one()> in (src/simplecycle/slice2.rs:7)
+  2. Dependencies of Slice slice3
+    - Method <cyclic_app::simplecycle::slice3::SliceThreeCallingMethodOfSliceOne::call_slice_one()> calls constructor <cyclic_app::simplecycle::slice2::SliceTwoCallingMethodOfSliceThree> in (src/simplecycle/slice3.rs:8)

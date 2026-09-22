@@ -243,7 +243,9 @@ They never replace an ArchUnit name.
 
 ### 2.4 Package identifiers → module identifiers
 
-Same grammar as `PackageMatcher`, with `::` instead of `.` as the separator:
+Same grammar as `PackageMatcher`, with `::` instead of `.` as the separator. A single `.` is
+accepted as an alias for `::` (it can never occur in a Rust path), so identifiers copied from the
+ArchUnit user guide such as `..adapter.(*)..` work verbatim:
 
 | Pattern | Meaning |
 |---|---|
@@ -560,38 +562,38 @@ Examples the tests must reproduce verbatim:
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `Architectures.layeredArchitecture()` → `DependencySettings` | `Architectures::layered_architecture()` / `layered_architecture()` | P3 | |
-| `.consideringAllDependencies()` / `.consideringOnlyDependenciesInLayers()` / `.consideringOnlyDependenciesInAnyPackage(..)` | same | P3 | |
-| `LayeredArchitecture.layer(name)` / `optionalLayer(name)` → `LayerDefinition.definedBy(String...)` / `definedBy(pred)` | `layer(&str)` / `optional_layer(&str)` → `defined_by(&[&str])` / `defined_by_with(pred)` | P3 | |
-| `withOptionalLayers(bool)` | same | P3 | |
-| `whereLayer(name)` → `LayerDependencySpecification.mayNotBeAccessedByAnyLayer()` / `mayOnlyBeAccessedByLayers(..)` / `mayNotAccessAnyLayer()` / `mayOnlyAccessLayers(..)` | same | P3 | |
-| `ignoreDependency(Class, Class)` / `(String, String)` / `(pred, pred)` | `ignore_dependency(&str, &str)` / `ignore_dependency_with(pred, pred)` | P3 | |
-| `ensureAllClassesAreContainedInArchitecture()` / `..Ignoring(String...)` / `..Ignoring(pred)` | same (`_with` for pred) | P3 | |
-| `as(..)` / `because(..)` / `allowEmptyShould(..)` / `check` / `evaluate` / `getDescription` | same | P3 | |
-| description text | identical: `Layered architecture considering all dependencies, consisting of\nlayer 'X' ('..x..')\nwhere layer 'X' may only be accessed by layers ['Y']` | P3 | |
-| `Architectures.onionArchitecture()` | `Architectures::onion_architecture()` | P3 | |
-| `.domainModels(..)` / `.domainServices(..)` / `.applicationServices(..)` / `.adapter(name, ..)` (String... and pred overloads) | same (`_with` for pred) | P3 | |
-| `withOptionalLayers`, `ignoreDependency` (3), `ensureAllClassesAreContainedInArchitecture[Ignoring]`, `as`, `because`, `allowEmptyShould`, `check`, `evaluate`, `getDescription` | same | P3 | |
+| `Architectures.layeredArchitecture()` → `DependencySettings` | `Architectures::layered_architecture()` / `layered_architecture()` | done | |
+| `.consideringAllDependencies()` / `.consideringOnlyDependenciesInLayers()` / `.consideringOnlyDependenciesInAnyPackage(..)` | same | done | `considering_only_dependencies_in_any_package(&[&str])` takes a slice instead of the varargs split |
+| `LayeredArchitecture.layer(name)` / `optionalLayer(name)` → `LayerDefinition.definedBy(String...)` / `definedBy(pred)` | `layer(&str)` / `optional_layer(&str)` → `defined_by(&[&str])` / `defined_by_with(pred)` | done | |
+| `withOptionalLayers(bool)` | same | done | |
+| `whereLayer(name)` → `LayerDependencySpecification.mayNotBeAccessedByAnyLayer()` / `mayOnlyBeAccessedByLayers(..)` / `mayNotAccessAnyLayer()` / `mayOnlyAccessLayers(..)` | same | done | |
+| `ignoreDependency(Class, Class)` / `(String, String)` / `(pred, pred)` | `ignore_dependency(origin, target)` with `impl Into<ItemSelector>` (names or predicates) | done | `ignore_dependency_where(DescribedPredicate<Dependency>)` is `[rust-only]` |
+| `ensureAllClassesAreContainedInArchitecture()` / `..Ignoring(String...)` / `..Ignoring(pred)` | same (`_with` for pred) | done | |
+| `as(..)` / `because(..)` / `allowEmptyShould(..)` / `check` / `evaluate` / `getDescription` | same | done | `because` returns `Box<dyn ArchRule>` as in Java; `as_`/`allow_empty_should` keep the concrete type |
+| description text | identical: `Layered architecture considering all dependencies, consisting of\nlayer 'X' ('..x..')\nwhere layer 'X' may only be accessed by layers ['Y']` | done | `Class <x> is not contained in architecture` becomes `Item <x> is not contained in architecture` |
+| `Architectures.onionArchitecture()` | `Architectures::onion_architecture()` | done | |
+| `.domainModels(..)` / `.domainServices(..)` / `.applicationServices(..)` / `.adapter(name, ..)` (String... and pred overloads) | same (`_with` for pred) | done | |
+| `withOptionalLayers`, `ignoreDependency` (3), `ensureAllClassesAreContainedInArchitecture[Ignoring]`, `as`, `because`, `allowEmptyShould`, `check`, `evaluate`, `getDescription` | same | done | `layered_architecture_delegate()` exposes the equivalent `LayeredArchitecture` |
 
 ### 5.2 Slices (`library.dependencies`)
 
 | Java | Rust | Status |
 |---|---|---|
-| `SlicesRuleDefinition.slices()` → `Creator.matching(pattern[, priority])` / `assignedFrom(SliceAssignment[, priority])` | `SlicesRuleDefinition::slices().matching(..)` / `assigned_from(..)` (+ `_with_priority`) | P3 |
-| `GivenSlices.namingSlices(pattern)` / `as(..)` / `that(pred)` / `should()` | `naming_slices(&str)` / `as_(..)` / `that(pred)` / `should()` | P3 |
-| `GivenSlicesConjunction.and(pred)` / `or(pred)` / `as` / `should()` | same | P3 |
-| `SlicesShould.beFreeOfCycles()` / `notDependOnEachOther()` | `be_free_of_cycles()` / `not_depend_on_each_other()` | P3 |
-| `SliceRule.ignoreDependency(Class,Class)/(String,String)/(pred,pred)` / `as` / `because` / `allowEmptyShould` / `check` / `evaluate` | same (`_with` for pred) | P3 |
-| `Slices`, `Slice` (`getNamePart(i)`, `getDependenciesFromSelf/ToSelf`, `as`), `SliceDependency`, `SliceAssignment`, `SliceIdentifier.of(..)/ignore()` | same | P3 |
-| cycle report text (`Cycle detected: Slice a -> \n                Slice b -> ...` + numbered dependency details) | identical | P3 |
-| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `archunit.toml` `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | P3 |
-| `CycleDetector.detectCycles(nodes, edges)`, `Cycle`, `Cycles`, `Edge` | `cycle_detection::{CycleDetector, Cycle, Cycles, Edge}` | P3 |
+| `SlicesRuleDefinition.slices()` → `Creator.matching(pattern[, priority])` / `assignedFrom(SliceAssignment[, priority])` | `SlicesRuleDefinition::slices().matching(..)` / `assigned_from(..)` (+ `_with_priority`); free fn `slices()` | done |
+| `GivenSlices.namingSlices(pattern)` / `as(..)` / `that(pred)` / `should()` | `naming_slices(&str)` / `as_(..)` / `that(pred)` / `should()` | done | `should_with(cond)` for a custom `ArchCondition<Slice>` (Java `should(condition)`) |
+| `GivenSlicesConjunction.and(pred)` / `or(pred)` / `as` / `should()` | same | done |
+| `SlicesShould.beFreeOfCycles()` / `notDependOnEachOther()` | `be_free_of_cycles()` / `not_depend_on_each_other()` | done |
+| `SliceRule.ignoreDependency(Class,Class)/(String,String)/(pred,pred)` / `as` / `because` / `allowEmptyShould` / `check` / `evaluate` | `ignore_dependency(origin, target)` with `impl Into<ItemSelector>`; rest same | done | `ignore_dependency_where(DescribedPredicate<Dependency>)` is `[rust-only]` |
+| `Slices`, `Slice` (`getNamePart(i)`, `getDependenciesFromSelf/ToSelf`, `as`), `SliceDependency`, `SliceAssignment`, `SliceIdentifier.of(..)/ignore()` | same; `SliceAssignment` is a trait, `slice_assignment(desc, closure)` builds one; `Slices::matching(..)`/`assigned_from(..)` return `SlicesTransformer` (`Slices.Transformer`) | done |
+| cycle report text (`Cycle detected: Slice a -> \n                Slice b -> ...` + numbered dependency details) | identical | done |
+| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `archunit.toml` `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge`; `ArchConfiguration::set_property("cycles.max_number_to_detect", ..)` | partial | Programmatic property done; the TOML file follows in P4. Same defaults (100 / 20) and the same `>= N times - the maximum number of cycles to detect has been reached ...` hint |
+| `CycleDetector.detectCycles(nodes, edges)`, `Cycle`, `Cycles`, `Edge` | `cycle_detection::{CycleDetector, Cycle, Cycles, Edge, SimpleEdge}`; `detect_cycles_with_limit(..)` for an explicit maximum | done |
 
 ### 5.3 Modules (`library.modules`)
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `ModuleRuleDefinition.modules().definedByPackages(pattern)` / `.derivingNameFromPattern(..)` | `modules().defined_by_packages(..)` / `deriving_name_from_pattern(..)` | deferred | Shares the slices infrastructure; cheap once P3 lands |
+| `ModuleRuleDefinition.modules().definedByPackages(pattern)` / `.derivingNameFromPattern(..)` | `modules().defined_by_packages(..)` / `deriving_name_from_pattern(..)` | deferred | Shares the slices infrastructure (`SlicesTransformer`, `CycleArchCondition`) |
 | `.definedBy(identifierFunction)` / `.derivingModule(descriptorFunction)` / `derivingModuleFromRootClassBy(..)` | `defined_by(fn)` / `deriving_module(fn)` / `deriving_module_from_root_item_by(fn)` | deferred | |
 | `.definedByAnnotation(A)` / `definedByAnnotation(A, nameFunction)` and `GivenModulesByAnnotation` | — | unsupported | Custom inner attributes on modules are unstable in Rust, so a module cannot carry `#![app_module(..)]`. Workaround documented: `defined_by_root_item` with a marker `const`/`struct` carrying an outer attribute |
 | `ModulesShould.beFreeOfCycles()` / `respectTheirAllowedDependencies(..)` / `respectTheirAllowedDependenciesDeclaredIn(..)` / `onlyDependOnEachOtherThroughClassesThat(..)` / `onlyDependOnEachOtherThroughPackagesDeclaredIn(..)` / `notDependOnEachOther()` | same, snake_case (the `DeclaredIn` annotation-based ones unsupported) | deferred | |
@@ -678,7 +680,7 @@ named `harness`; every annotation keeps its ArchUnit name.
 |---|---|---|---|
 | file at classpath root | `archunit.toml` in the crate root (searched upward to the workspace root) | P4 | |
 | `-Darchunit.key=value` override | `ARCHUNIT_KEY=value` environment variable (`.` and `-` → `_`, upper-cased) | P4 | |
-| `ArchConfiguration.get()` / `getProperty` / `setProperty` / `containsProperty` / `getPropertyOrDefault` / `getSubProperties` / `reset` / `withThreadLocalScope` | `ArchConfiguration::get()` (global, `RwLock`) / `property` / `set_property` / `contains_property` / `property_or_default` / `sub_properties` / `reset` / `with_thread_local_scope` | P4 | |
+| `ArchConfiguration.get()` / `getProperty` / `setProperty` / `containsProperty` / `getPropertyOrDefault` / `getSubProperties` / `reset` / `withThreadLocalScope` | `ArchConfiguration::get()` (global, `RwLock`) / `property` / `set_property` / `contains_property` / `property_or_default` / `sub_properties` / `reset` / `with_thread_local_scope` | partial | Programmatic API done; loading from `archunit.toml` follows in P4 |
 | `resolveMissingDependenciesFromClassPath` | `resolve_missing_dependencies_from_classpath` (default `false`) | partial | When `true`, missing items from dependency crates are parsed from the cargo registry checkout. Default differs from Java (`true`) because parsing large crates is slow; `std`/`core`/`alloc` are always stubs |
 | `classResolver` / `classResolver.args` (`SelectedClassResolverFromClasspath`) | `class_resolver.packages = ["tokio..", "serde.."]` | P4 | Only the "selected packages" resolver; no custom resolver by class name |
 | `import.dependencyResolutionProcess.maxIterationsFor{MemberTypes,AccessesToTypes,Supertypes,PermittedSubclasses,EnclosingTypes,AnnotationTypes,GenericSignatureTypes}` | `[import.dependency_resolution_process] max_iterations_for_member_types`, … | P4 | Same defaults; `permitted_subclasses` accepted and ignored |
@@ -686,7 +688,7 @@ named `harness`; every annotation keeps its ArchUnit name.
 | `archRule.failOnEmptyShould` | `[arch_rule] fail_on_empty_should` (default `true`); `ArchConfiguration::set_fail_on_empty_should(..)` | partial | Programmatic API done; the TOML key follows in P4 |
 | `failureDisplayFormat` | — (programmatic only) | partial | |
 | `extension.<id>.enabled` / `extension.<id>.<prop>` | `[extension.<id>] enabled`, … | deferred | |
-| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | P3 | |
+| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | partial | Read via `ArchConfiguration::max_number_of_cycles_to_detect()` / `max_number_of_dependencies_per_edge()`; settable programmatically now, from the TOML file in P4 |
 | `freeze.*` | `[freeze] …` (see §5.6) | P5 | |
 | `junit.*` | — | unsupported | see §6 |
 | `[rust-only]` | `[import] include_targets = ["lib", "bin", "test", "example", "bench"]`, `[import] exclude_binaries_from_coding_rules = true`, `[report] item_prefix = "Item"` (allows `Struct`/`Trait`/… kind prefixes instead of the generic `Item`) | P4/P5 | |
@@ -758,6 +760,42 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 * **Empty `should`** panics from `evaluate` with ArchUnit's message, naming
   `ArchRule::allow_empty_should(true)` and `arch_rule.fail_on_empty_should = false`.
 
+### Phase 3
+
+* **Architectures** are plain `ArchRule` implementations (`LayeredArchitecture`,
+  `OnionArchitecture`) with the Java builder shape; the onion architecture is evaluated through
+  its `LayeredArchitecture` delegate exactly as in Java, so both share one report format.
+  Layer names in `where_layer(..)`/`may_only_be_accessed_by_layers(..)` are validated eagerly
+  and panic with `There is no layer named '<x>'` (Java's `IllegalArgumentException`).
+* **Module items and layers.** Because `use` declarations are `imports` dependencies of the
+  module item (Phase 1), a module whose path matches a layer's package identifier is *in* that
+  layer, and its imports are checked like any other dependency. Layers defined by attributes
+  (`annotated_with(..)`) do not contain modules, so a module importing an annotated item from
+  a protected layer is reported as a violation from outside the architecture. This is the
+  faithful reading of ArchUnit's semantics; use `ignore_dependency_where(dependency_origin(modules()))`
+  to opt out.
+* **Folded impl blocks.** Phase 3 fixed a leak from Phase 1: impl blocks of imported types are
+  now folded completely, i.e. their `implements trait`, type-parameter and self-type
+  dependencies are attributed to the type, and the hidden impl item never appears as an origin
+  in `only_have_dependents_where(..)`-style reports.
+* **Slices** follow Java's `Slices.Transformer`: `that`/`and`/`or` extend the description
+  (`slices matching '..a.(*)..' that <pred>`), `as_` replaces it, `naming_slices("$1 layer")`
+  renames every slice. `Slice` equality is identifier equality; `dependencies_from_self()`
+  excludes targets assigned to the same slice (via the assignment, not the item set). Slices are
+  built from `RustItems` iteration, so modules are never slice members.
+* **Cycle detection** ports Johnson's algorithm on Tarjan components (`cycle_detection`), with
+  `Cycles::max_number_of_cycles_reached()`, the `cycles.max_number_to_detect` limit (default 100)
+  and `cycles.max_number_of_dependencies_per_edge` (default 20). The hint text names
+  `archunit.toml` and the Rust key instead of `archunit.properties`/`cycles.maxNumberToDetect`.
+  `CycleArchCondition::builder()` is public so custom components (modules, crates) can reuse it.
+* **Custom event objects.** `CorrespondingObject::Other` now holds a `CorrespondingValue`
+  (`Slice`, `SliceDependency`, `Vec<Dependency>`) whose `dependencies()` feeds
+  `EvaluationResult::handle_violations::<Dependency>` — the port of Java's `Convertible`, so
+  cycle and slice violations can be post-processed as class dependencies (needed by
+  `FreezingArchRule` in Phase 5).
+* **Package identifiers** accept a single `.` as an alias for `::`, so `..app.(*)..` from the
+  brief and the user guide works without translation.
+
 ## 10. Phase status log
 
 | Phase | Status | Summary |
@@ -765,7 +803,7 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 | 0 | done | Research, this mapping, PLAN.md, CLAUDE.md, NOTICE |
 | 1 | done | Importer (`cargo_metadata` + `syn`), name resolution across modules/crates incl. re-exports and globs, domain model with members, accesses, dependencies; fixtures `layered_app`, `onion_app`, `cyclic_app`, `reexports_app`; 35 tests |
 | 2 | done | `ArchRule`, `ArchCondition`/`ConditionLogic`, events, `EvaluationResult`/`FailureReport` in ArchUnit's format, ignore patterns, `ArchConfiguration` (programmatic), all `ArchConditions`, the full `classes()`/`no_classes()`/`the_class()`/members/`all()` syntax; 25 lang tests incl. golden reports |
-| 3 | pending | |
+| 3 | done | `library::architectures` (layered + onion), `library::dependencies` (slices, `be_free_of_cycles`, `not_depend_on_each_other`, `ignore_dependency`), `library::cycle_detection` (Johnson/Tarjan port, `CycleArchCondition`), cycle configuration properties; 24 library tests incl. golden reports for layered, onion, simple cycle, simple scenario and controller slices |
 | 4 | pending | |
 | 5 | pending | |
 | 6 | pending | |

@@ -23,7 +23,31 @@ pub enum CorrespondingObject {
     /// A plain text, e.g. a count.
     Text(String),
     /// Any other value, e.g. a slice or cycle from the library layer.
-    Other(Arc<dyn Any + Send + Sync>),
+    Other(Arc<dyn CorrespondingValue>),
+}
+
+/// A custom value that can be the object of an event: slices, slice dependencies, cycles.
+///
+/// Implement [`dependencies`](Self::dependencies) when the value stands for class dependencies,
+/// so `handle_violations::<Dependency>` can extract them (Java's `Convertible`).
+pub trait CorrespondingValue: Any + Send + Sync + fmt::Debug {
+    /// `self` as `Any`, for downcasting.
+    fn as_any(&self) -> &dyn Any;
+
+    /// The class dependencies this value represents, if any.
+    fn dependencies(&self) -> Vec<Dependency> {
+        Vec::new()
+    }
+}
+
+impl CorrespondingValue for Vec<Dependency> {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn dependencies(&self) -> Vec<Dependency> {
+        self.clone()
+    }
 }
 
 impl fmt::Debug for CorrespondingObject {
@@ -35,21 +59,21 @@ impl fmt::Debug for CorrespondingObject {
             CorrespondingObject::Access(a) => write!(f, "{a:?}"),
             CorrespondingObject::Dependency(d) => write!(f, "{d:?}"),
             CorrespondingObject::Text(t) => write!(f, "{t:?}"),
-            CorrespondingObject::Other(_) => f.write_str("Other(..)"),
+            CorrespondingObject::Other(o) => write!(f, "{o:?}"),
         }
     }
 }
 
 impl CorrespondingObject {
-    /// Wraps an arbitrary value.
-    pub fn other<T: Any + Send + Sync>(value: T) -> Self {
+    /// Wraps a custom value.
+    pub fn other<T: CorrespondingValue>(value: T) -> Self {
         CorrespondingObject::Other(Arc::new(value))
     }
 
     /// Downcasts an [`Other`](Self::Other) value.
     pub fn downcast_ref<T: Any>(&self) -> Option<&T> {
         match self {
-            CorrespondingObject::Other(any) => any.downcast_ref::<T>(),
+            CorrespondingObject::Other(value) => value.as_any().downcast_ref::<T>(),
             _ => None,
         }
     }
@@ -199,6 +223,7 @@ impl FromCorrespondingObject for Dependency {
                 .into_iter()
                 .filter(|d| d.description() == a.description())
                 .collect(),
+            CorrespondingObject::Other(value) => value.dependencies(),
             _ => Vec::new(),
         }
     }

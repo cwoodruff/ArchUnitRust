@@ -1793,8 +1793,23 @@ impl Builder<'_> {
                     location.clone(),
                 );
             }
+            // A folded impl block (of an imported type) contributes to its self type; the
+            // impl item itself never appears as an origin.
+            let folded_into =
+                if self.graph.items[id].kind == ItemKind::Impl && !self.graph.is_class_like(id) {
+                    self.graph.items[id]
+                        .impl_info
+                        .as_ref()
+                        .and_then(|i| i.self_type.raw_item())
+                } else {
+                    None
+                };
             let params = self.graph.items[id].type_parameters.clone();
-            self.type_parameter_dependencies(Origin::Item(id), &params, &location);
+            self.type_parameter_dependencies(
+                Origin::Item(folded_into.unwrap_or(id)),
+                &params,
+                &location,
+            );
             if let Some(alias) = self.graph.items[id].alias_target.clone() {
                 self.type_dependencies(
                     Origin::Item(id),
@@ -1821,7 +1836,7 @@ impl Builder<'_> {
                 }
             }
             if let Some(impl_info) = self.graph.items[id].impl_info.clone() {
-                if self.graph.items[id].kind == ItemKind::Impl {
+                if self.graph.items[id].kind == ItemKind::Impl && folded_into.is_none() {
                     self.type_dependencies(
                         Origin::Item(id),
                         &impl_info.self_type,

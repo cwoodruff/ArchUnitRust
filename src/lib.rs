@@ -14,6 +14,7 @@ pub mod base;
 pub mod config;
 pub mod core;
 pub mod lang;
+pub mod library;
 
 /// Everything a typical architecture test needs.
 pub mod prelude {

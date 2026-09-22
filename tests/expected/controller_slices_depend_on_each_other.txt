@@ -1,0 +1,7 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'slices matching '..controller.(*)..' should not depend on each other' was violated (2 times):
+Slice one depends on Slice two:
+Method <layered_app::controller::one::UseCaseOneTwoController::use_case_one()> calls constructor <layered_app::controller::two::UseCaseTwoController::new()> in (src/controller/one.rs:7)
+Method <layered_app::controller::one::UseCaseOneTwoController::use_case_one()> calls method <layered_app::controller::two::UseCaseTwoController::use_case_two()> in (src/controller/one.rs:7)
+Slice three depends on Slice one:
+Method <layered_app::controller::three::UseCaseThreeController::use_case_three(&UseCaseOneTwoController)> calls method <layered_app::controller::one::UseCaseOneTwoController::use_case_one()> in (src/controller/three.rs:7)
+Method <layered_app::controller::three::UseCaseThreeController::use_case_three(&UseCaseOneTwoController)> has parameter of type <layered_app::controller::one::UseCaseOneTwoController> in (src/controller/three.rs:6)

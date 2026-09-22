@@ -14,7 +14,7 @@
 //!     .check(&items);
 //! ```
 
-mod aggregators;
+pub(crate) mod aggregators;
 mod classes;
 mod members;
 mod objects;

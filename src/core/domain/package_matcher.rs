@@ -6,7 +6,8 @@ use crate::base::{ArchUnitError, DescribedPredicate, join_single_quoted};
 
 /// Matches module paths against a package identifier (`PackageMatcher`).
 ///
-/// The syntax is ArchUnit's, with `::` as the separator:
+/// The syntax is ArchUnit's, with `::` as the separator (a single `.` is accepted as an
+/// alias, so identifiers from the ArchUnit user guide work verbatim):
 ///
 /// | Pattern | Meaning |
 /// |---|---|
@@ -180,7 +181,9 @@ fn convert_to_regex(identifier: &str) -> String {
         .replace("(**)", MARKER)
         .replace('*', r"\w+")
         .replace(MARKER, TWO_STAR_CAPTURE_REGEX)
-        .replace("..", TWO_DOTS_REGEX);
+        .replace("..", TWO_DOTS_REGEX)
+        // A single dot is the Java separator; it is accepted as an alias for `::`.
+        .replace('.', "::");
     format!("^{pattern}$")
 }
 

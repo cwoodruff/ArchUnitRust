@@ -20,12 +20,21 @@ pub const ARCHUNIT_IGNORE_PATTERNS_FILE_NAME: &str = "archunit_ignore_patterns.t
 /// (`archRule.failOnEmptyShould`).
 pub const FAIL_ON_EMPTY_SHOULD_PROPERTY_NAME: &str = "arch_rule.fail_on_empty_should";
 
+/// `cycles.maxNumberToDetect`: the maximum number of cycles a slice rule reports.
+pub const MAX_NUMBER_OF_CYCLES_TO_DETECT_PROPERTY_NAME: &str = "cycles.max_number_to_detect";
+
+/// `cycles.maxNumberOfDependenciesPerEdge`: the maximum number of dependencies printed per
+/// edge of a cycle.
+pub const MAX_NUMBER_OF_DEPENDENCIES_PER_EDGE_PROPERTY_NAME: &str =
+    "cycles.max_number_of_dependencies_per_edge";
+
 /// A snapshot of configuration values.
 #[derive(Clone)]
 pub struct ArchConfiguration {
     fail_on_empty_should: bool,
     ignore_patterns: Option<Vec<Regex>>,
     failure_display_format: Option<Arc<dyn FailureDisplayFormat>>,
+    properties: std::collections::HashMap<String, String>,
 }
 
 impl std::fmt::Debug for ArchConfiguration {
@@ -53,6 +62,7 @@ impl Default for ArchConfiguration {
             fail_on_empty_should: true,
             ignore_patterns: None,
             failure_display_format: None,
+            properties: std::collections::HashMap::new(),
         }
     }
 }
@@ -153,6 +163,57 @@ impl ArchConfiguration {
     pub fn load_ignore_patterns_from(file: impl AsRef<Path>) {
         let patterns = read_ignore_patterns(file.as_ref());
         Self::set_ignore_patterns(patterns);
+    }
+
+    /// A free-form property (`ArchConfiguration.getProperty(..)`), e.g. `cycles.max_number_to_detect`.
+    pub fn property(&self, name: &str) -> Option<String> {
+        self.properties.get(name).cloned()
+    }
+
+    /// `getPropertyOrDefault(..)`.
+    pub fn property_or_default(&self, name: &str, default: &str) -> String {
+        self.property(name).unwrap_or_else(|| default.to_owned())
+    }
+
+    /// `containsProperty(..)`.
+    pub fn contains_property(&self, name: &str) -> bool {
+        self.properties.contains_key(name)
+    }
+
+    /// `setProperty(..)`.
+    pub fn set_property(name: &str, value: &str) {
+        let (name, value) = (name.to_owned(), value.to_owned());
+        Self::update(|c| {
+            c.properties.insert(name, value);
+        });
+    }
+
+    /// Properties whose keys start with `prefix.`, with the prefix removed (`getSubProperties(..)`).
+    pub fn sub_properties(&self, prefix: &str) -> std::collections::HashMap<String, String> {
+        let prefix = format!("{prefix}.");
+        self.properties
+            .iter()
+            .filter_map(|(k, v)| {
+                k.strip_prefix(&prefix)
+                    .map(|rest| (rest.to_owned(), v.clone()))
+            })
+            .collect()
+    }
+
+    fn usize_property(&self, name: &str, default: usize) -> usize {
+        self.property(name)
+            .and_then(|v| v.trim().parse().ok())
+            .unwrap_or(default)
+    }
+
+    /// `cycles.max_number_to_detect` (default 100).
+    pub fn max_number_of_cycles_to_detect(&self) -> usize {
+        self.usize_property(MAX_NUMBER_OF_CYCLES_TO_DETECT_PROPERTY_NAME, 100)
+    }
+
+    /// `cycles.max_number_of_dependencies_per_edge` (default 20).
+    pub fn max_number_of_dependencies_per_edge(&self) -> usize {
+        self.usize_property(MAX_NUMBER_OF_DEPENDENCIES_PER_EDGE_PROPERTY_NAME, 20)
     }
 
     /// The format used to render failure reports (`failureDisplayFormat`).

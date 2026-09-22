@@ -27,7 +27,7 @@ pub use evaluation::{
 };
 pub use events::{
     AsCorrespondingObject, ConditionEvent, ConditionEvents, CorrespondingObject,
-    FromCorrespondingObject, SimpleConditionEvent,
+    CorrespondingValue, FromCorrespondingObject, SimpleConditionEvent,
 };
 pub use rule::{
     ArchRule, ClassesTransformer, CompositeArchRule, Priority, SimpleArchRule, assertions,
