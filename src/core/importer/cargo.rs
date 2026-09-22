@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use cargo_metadata::MetadataCommand;
 
 use crate::base::ArchUnitError;
-use crate::core::domain::TargetKind;
+use crate::core::domain::{PackageMatcher, TargetKind};
 
 /// One cargo target to import: a crate root file plus what is needed to resolve names in it.
 #[derive(Debug, Clone)]
@@ -30,6 +30,7 @@ fn normalize(name: &str) -> String {
 pub(crate) fn discover(
     path: &Path,
     with_dependencies: bool,
+    only_dependencies: &[PackageMatcher],
 ) -> Result<Vec<CrateSource>, ArchUnitError> {
     let mut command = MetadataCommand::new();
     if path.is_file() {
@@ -61,6 +62,12 @@ pub(crate) fn discover(
             continue;
         }
         let lib_name = lib_name_of(package);
+        if !is_member
+            && !only_dependencies.is_empty()
+            && !only_dependencies.iter().any(|m| m.matches(&lib_name))
+        {
+            continue;
+        }
         let crate_dir = package
             .manifest_path
             .parent()

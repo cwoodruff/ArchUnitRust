@@ -1,0 +1,16 @@
+[package]
+name = "archunit-macros"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Attribute macros for archunit: #[analyze_classes], #[arch_test], #[arch_rules], #[arch_ignore], #[arch_tag]"
+license = "Apache-2.0"
+repository = "https://github.com/cwoodruff/ArchUnitRust"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full", "extra-traits"] }

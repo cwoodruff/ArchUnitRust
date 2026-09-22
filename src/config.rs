@@ -1,9 +1,27 @@
-//! Global configuration (`ArchConfiguration` / `archunit.properties`).
+//! Global configuration (`ArchConfiguration` / `archunit.properties` → `archunit.toml`).
 //!
-//! Phase 2 provides the programmatic API and the settings the lang layer needs:
-//! `fail_on_empty_should`, ignore patterns from `archunit_ignore_patterns.txt`, and the
-//! failure display format. Loading `archunit.toml` and environment overrides follows in
-//! Phase 4.
+//! Properties are read from `archunit.toml` next to the `Cargo.toml` of the crate under test
+//! (searched upward to the workspace root) with nested tables flattened to dotted keys, e.g.
+//!
+//! ```toml
+//! [arch_rule]
+//! fail_on_empty_should = false
+//!
+//! [cycles]
+//! max_number_to_detect = 50
+//!
+//! resolve_missing_dependencies_from_classpath = true
+//! [class_resolver]
+//! packages = ["tokio..", "serde.."]
+//! ```
+//!
+//! gives the properties `arch_rule.fail_on_empty_should`, `cycles.max_number_to_detect`,
+//! `resolve_missing_dependencies_from_classpath` and `class_resolver.packages`
+//! (arrays become comma-separated values). Every property can be overridden by an
+//! environment variable named `ARCHUNIT_` + the key upper-cased with `.` and `-` replaced by
+//! `_` (`ARCHUNIT_ARCH_RULE_FAIL_ON_EMPTY_SHOULD=false`), the counterpart of Java's
+//! `-Darchunit.archRule.failOnEmptyShould=false`. Violations to ignore live in
+//! `archunit_ignore_patterns.txt`.
 
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
@@ -15,6 +33,24 @@ use crate::lang::FailureDisplayFormat;
 
 /// The file, relative to the crate root, listing regexes of violations to ignore.
 pub const ARCHUNIT_IGNORE_PATTERNS_FILE_NAME: &str = "archunit_ignore_patterns.txt";
+
+/// The configuration file (`archunit.properties`).
+pub const ARCHUNIT_PROPERTIES_RESOURCE_NAME: &str = "archunit.toml";
+
+/// The prefix of environment variables overriding properties.
+pub const ENVIRONMENT_VARIABLE_PREFIX: &str = "ARCHUNIT_";
+
+/// `resolveMissingDependenciesFromClassPath`: parse dependency crates instead of stubbing them.
+pub const RESOLVE_MISSING_DEPENDENCIES_FROM_CLASS_PATH: &str =
+    "resolve_missing_dependencies_from_classpath";
+
+/// `classResolver.args`: the crates to parse when resolving from the classpath
+/// (`class_resolver.packages = ["tokio..", "serde.."]`).
+pub const CLASS_RESOLVER_PACKAGES_PROPERTY_NAME: &str = "class_resolver.packages";
+
+/// `[rust-only]` the cargo target kinds to import
+/// (`import.include_targets = ["lib", "bin", "test", "example", "bench"]`).
+pub const INCLUDE_TARGETS_PROPERTY_NAME: &str = "import.include_targets";
 
 /// The configuration key controlling whether rules fail when they check nothing
 /// (`archRule.failOnEmptyShould`).
@@ -31,7 +67,6 @@ pub const MAX_NUMBER_OF_DEPENDENCIES_PER_EDGE_PROPERTY_NAME: &str =
 /// A snapshot of configuration values.
 #[derive(Clone)]
 pub struct ArchConfiguration {
-    fail_on_empty_should: bool,
     ignore_patterns: Option<Vec<Regex>>,
     failure_display_format: Option<Arc<dyn FailureDisplayFormat>>,
     properties: std::collections::HashMap<String, String>,
@@ -40,7 +75,6 @@ pub struct ArchConfiguration {
 impl std::fmt::Debug for ArchConfiguration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ArchConfiguration")
-            .field("fail_on_empty_should", &self.fail_on_empty_should)
             .field(
                 "ignore_patterns",
                 &self
@@ -57,12 +91,14 @@ impl std::fmt::Debug for ArchConfiguration {
 }
 
 impl Default for ArchConfiguration {
+    /// The configuration from `archunit.toml` of the crate under test, or empty defaults.
     fn default() -> Self {
         Self {
-            fail_on_empty_should: true,
             ignore_patterns: None,
             failure_display_format: None,
-            properties: std::collections::HashMap::new(),
+            properties: find_configuration_file(&crate::core::importer::current_crate_dir())
+                .map(|file| read_properties(&file))
+                .unwrap_or_default(),
         }
     }
 }
@@ -127,14 +163,65 @@ impl ArchConfiguration {
         Self::update(|c| *c = ArchConfiguration::default());
     }
 
+    /// Replaces the properties with those of the given `archunit.toml`
+    /// (`ArchConfiguration.reset()` against another file) `[rust-only]`.
+    pub fn load_from(file: impl AsRef<Path>) {
+        let properties = read_properties(file.as_ref());
+        Self::update(|c| c.properties = properties);
+    }
+
     /// Whether rules fail when no items reach the `should` clause (`archRule.failOnEmptyShould`).
     pub fn fail_on_empty_should(&self) -> bool {
-        self.fail_on_empty_should
+        self.bool_property(FAIL_ON_EMPTY_SHOULD_PROPERTY_NAME, true)
     }
 
     /// Sets [`fail_on_empty_should`](Self::fail_on_empty_should).
     pub fn set_fail_on_empty_should(value: bool) {
-        Self::update(|c| c.fail_on_empty_should = value);
+        Self::set_property(FAIL_ON_EMPTY_SHOULD_PROPERTY_NAME, &value.to_string());
+    }
+
+    /// `resolveMissingDependenciesFromClassPath` (default `false`): whether the importer parses
+    /// the source of dependency crates instead of stubbing their items.
+    pub fn resolve_missing_dependencies_from_classpath(&self) -> bool {
+        self.bool_property(RESOLVE_MISSING_DEPENDENCIES_FROM_CLASS_PATH, false)
+    }
+
+    /// Sets [`resolve_missing_dependencies_from_classpath`](Self::resolve_missing_dependencies_from_classpath).
+    pub fn set_resolve_missing_dependencies_from_classpath(value: bool) {
+        Self::set_property(
+            RESOLVE_MISSING_DEPENDENCIES_FROM_CLASS_PATH,
+            &value.to_string(),
+        );
+    }
+
+    /// The crate identifiers (`class_resolver.packages`) restricting which dependency crates
+    /// are parsed when resolving from the classpath; empty means all of them
+    /// (`classResolver.args` of `SelectedClassResolverFromClasspath`).
+    pub fn class_resolver_packages(&self) -> Vec<String> {
+        self.list_property(CLASS_RESOLVER_PACKAGES_PROPERTY_NAME)
+    }
+
+    /// `[rust-only]` the cargo target kinds to import (`import.include_targets`), empty for all.
+    pub fn include_targets(&self) -> Vec<String> {
+        self.list_property(INCLUDE_TARGETS_PROPERTY_NAME)
+    }
+
+    fn bool_property(&self, name: &str, default: bool) -> bool {
+        self.property(name)
+            .and_then(|v| v.trim().parse().ok())
+            .unwrap_or(default)
+    }
+
+    fn list_property(&self, name: &str) -> Vec<String> {
+        self.property(name)
+            .map(|v| {
+                v.split(',')
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .map(str::to_owned)
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     /// The regexes from `archunit_ignore_patterns.txt` (lines starting with `#` are comments),
@@ -165,9 +252,20 @@ impl ArchConfiguration {
         Self::set_ignore_patterns(patterns);
     }
 
-    /// A free-form property (`ArchConfiguration.getProperty(..)`), e.g. `cycles.max_number_to_detect`.
+    /// A free-form property (`ArchConfiguration.getProperty(..)`), e.g.
+    /// `cycles.max_number_to_detect`; an environment variable `ARCHUNIT_<KEY>` takes precedence.
     pub fn property(&self, name: &str) -> Option<String> {
-        self.properties.get(name).cloned()
+        std::env::var(environment_variable_name(name))
+            .ok()
+            .or_else(|| self.properties.get(name).cloned())
+    }
+
+    /// Removes a property (`ArchConfiguration.removeProperty(..)`); an environment override stays.
+    pub fn remove_property(name: &str) {
+        let name = name.to_owned();
+        Self::update(|c| {
+            c.properties.remove(&name);
+        });
     }
 
     /// `getPropertyOrDefault(..)`.
@@ -177,7 +275,7 @@ impl ArchConfiguration {
 
     /// `containsProperty(..)`.
     pub fn contains_property(&self, name: &str) -> bool {
-        self.properties.contains_key(name)
+        self.property(name).is_some()
     }
 
     /// `setProperty(..)`.
@@ -189,13 +287,14 @@ impl ArchConfiguration {
     }
 
     /// Properties whose keys start with `prefix.`, with the prefix removed (`getSubProperties(..)`).
+    /// Environment overrides apply to the keys present in the file or set programmatically.
     pub fn sub_properties(&self, prefix: &str) -> std::collections::HashMap<String, String> {
         let prefix = format!("{prefix}.");
         self.properties
-            .iter()
-            .filter_map(|(k, v)| {
+            .keys()
+            .filter_map(|k| {
                 k.strip_prefix(&prefix)
-                    .map(|rest| (rest.to_owned(), v.clone()))
+                    .map(|rest| (rest.to_owned(), self.property(k).unwrap_or_default()))
             })
             .collect()
     }
@@ -227,12 +326,21 @@ impl ArchConfiguration {
     }
 }
 
-fn load_ignore_patterns(crate_dir: &Path) -> Vec<Regex> {
+/// The environment variable overriding `name`: `ARCHUNIT_` + upper-cased key with `.`/`-` → `_`.
+pub fn environment_variable_name(name: &str) -> String {
+    format!(
+        "{ENVIRONMENT_VARIABLE_PREFIX}{}",
+        name.to_uppercase().replace(['.', '-'], "_")
+    )
+}
+
+/// Finds `file_name` in `crate_dir` or one of its parents up to the workspace root.
+fn find_upward(crate_dir: &Path, file_name: &str) -> Option<PathBuf> {
     let mut dir: Option<PathBuf> = Some(crate_dir.to_path_buf());
     while let Some(current) = dir {
-        let candidate = current.join(ARCHUNIT_IGNORE_PATTERNS_FILE_NAME);
+        let candidate = current.join(file_name);
         if candidate.is_file() {
-            return read_ignore_patterns(&candidate);
+            return Some(candidate);
         }
         if current.join("Cargo.toml").is_file()
             && std::fs::read_to_string(current.join("Cargo.toml"))
@@ -242,7 +350,63 @@ fn load_ignore_patterns(crate_dir: &Path) -> Vec<Regex> {
         }
         dir = current.parent().map(Path::to_path_buf);
     }
-    Vec::new()
+    None
+}
+
+fn find_configuration_file(crate_dir: &Path) -> Option<PathBuf> {
+    find_upward(crate_dir, ARCHUNIT_PROPERTIES_RESOURCE_NAME)
+}
+
+/// Reads `archunit.toml`, flattening tables to dotted keys and arrays to comma-separated values.
+fn read_properties(file: &Path) -> std::collections::HashMap<String, String> {
+    let mut properties = std::collections::HashMap::new();
+    let Ok(text) = std::fs::read_to_string(file) else {
+        return properties;
+    };
+    match text.parse::<toml::Table>() {
+        Ok(table) => flatten_table("", &table, &mut properties),
+        Err(e) => eprintln!("archunit: ignoring invalid {}: {e}", file.display()),
+    }
+    properties
+}
+
+fn flatten_table(
+    prefix: &str,
+    table: &toml::Table,
+    into: &mut std::collections::HashMap<String, String>,
+) {
+    for (key, value) in table {
+        let name = if prefix.is_empty() {
+            key.clone()
+        } else {
+            format!("{prefix}.{key}")
+        };
+        match value {
+            toml::Value::Table(nested) => flatten_table(&name, nested, into),
+            other => {
+                into.insert(name, toml_value_to_string(other));
+            }
+        }
+    }
+}
+
+fn toml_value_to_string(value: &toml::Value) -> String {
+    match value {
+        toml::Value::String(s) => s.clone(),
+        toml::Value::Array(items) => items
+            .iter()
+            .map(toml_value_to_string)
+            .collect::<Vec<_>>()
+            .join(","),
+        toml::Value::Table(_) => String::new(),
+        other => other.to_string(),
+    }
+}
+
+fn load_ignore_patterns(crate_dir: &Path) -> Vec<Regex> {
+    find_upward(crate_dir, ARCHUNIT_IGNORE_PATTERNS_FILE_NAME)
+        .map(|file| read_ignore_patterns(&file))
+        .unwrap_or_default()
 }
 
 fn read_ignore_patterns(file: &Path) -> Vec<Regex> {

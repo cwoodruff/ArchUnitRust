@@ -82,9 +82,9 @@ They never replace an ArchUnit name.
 | `DO_NOT_INCLUDE_ARCHIVES` | `DoNotIncludeDependencies` | done | Same as above (no archive/jar distinction in Rust) |
 | `DO_NOT_INCLUDE_PACKAGE_INFOS` | — | unsupported | No `package-info` concept |
 | `ONLY_INCLUDE_TESTS` | `import_option::OnlyIncludeTests` | done | |
-| `DoNotIncludeJars`-style custom `ImportOption` classes for `@AnalyzeClasses` | any type implementing `ImportOption` | P4 | |
+| `DoNotIncludeJars`-style custom `ImportOption` classes for `@AnalyzeClasses` | any `ImportOption` value in `import_options = [..]` | done | |
 | `ImportOptions` (internal) | — | — | internal |
-| `ClassResolver` / `SelectedClassResolverFromClasspath` | `CrateImporter::resolving_missing_dependencies_from_classpath(true)` | partial | Missing items from dependency crates are stubbed by default. The option parses every dependency's library target from the cargo registry checkout; it has no per-package selection or iteration limits yet (config in P4) |
+| `ClassResolver` / `SelectedClassResolverFromClasspath` | `CrateImporter::resolving_missing_dependencies_from_classpath(true)` + `class_resolver.packages` in `archunit.toml` | partial | Missing items from dependency crates are stubbed by default. The option parses the library target of every dependency, or only of the crates selected by `class_resolver.packages`; no custom resolver by class name |
 | "Dealing with Missing Classes" (stubs) | `RustItem::is_fully_imported()` returns `false` for stubs | done | |
 
 ### 2.2 Domain model
@@ -586,7 +586,7 @@ Examples the tests must reproduce verbatim:
 | `SliceRule.ignoreDependency(Class,Class)/(String,String)/(pred,pred)` / `as` / `because` / `allowEmptyShould` / `check` / `evaluate` | `ignore_dependency(origin, target)` with `impl Into<ItemSelector>`; rest same | done | `ignore_dependency_where(DescribedPredicate<Dependency>)` is `[rust-only]` |
 | `Slices`, `Slice` (`getNamePart(i)`, `getDependenciesFromSelf/ToSelf`, `as`), `SliceDependency`, `SliceAssignment`, `SliceIdentifier.of(..)/ignore()` | same; `SliceAssignment` is a trait, `slice_assignment(desc, closure)` builds one; `Slices::matching(..)`/`assigned_from(..)` return `SlicesTransformer` (`Slices.Transformer`) | done |
 | cycle report text (`Cycle detected: Slice a -> \n                Slice b -> ...` + numbered dependency details) | identical | done |
-| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `archunit.toml` `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge`; `ArchConfiguration::set_property("cycles.max_number_to_detect", ..)` | partial | Programmatic property done; the TOML file follows in P4. Same defaults (100 / 20) and the same `>= N times - the maximum number of cycles to detect has been reached ...` hint |
+| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `archunit.toml` `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge`; `ArchConfiguration::set_property("cycles.max_number_to_detect", ..)` | done | Same defaults (100 / 20) and the same `>= N times - the maximum number of cycles to detect has been reached ...` hint |
 | `CycleDetector.detectCycles(nodes, edges)`, `Cycle`, `Cycles`, `Edge` | `cycle_detection::{CycleDetector, Cycle, Cycles, Edge, SimpleEdge}`; `detect_cycles_with_limit(..)` for an explicit maximum | done |
 
 ### 5.3 Modules (`library.modules`)
@@ -658,19 +658,19 @@ named `harness`; every annotation keeps its ArchUnit name.
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `@AnalyzeClasses(packages, packagesOf, classes, locations, wholeClasspath, importOptions, cacheMode)` on a test class | `#[analyze_classes(packages = [..], packages_of = [..], items = [..], locations = Provider, whole_workspace = true, import_options = [..], cache_mode = PerClass)]` on an inline `mod` | P4 | `wholeClasspath` → `whole_workspace`. Without arguments the crate containing the test module is analyzed |
+| `@AnalyzeClasses(packages, packagesOf, classes, locations, wholeClasspath, importOptions, cacheMode)` on a test class | `#[analyze_classes(packages = [..], packages_of = [..], items = [..], locations = [ProviderType, ..], whole_workspace = true, import_options = [DoNotIncludeTests, ..], cache_mode = Forever \| PerClass)]` on an inline `mod` | done | `wholeClasspath` → `whole_workspace`, `classes` → `items` (`classes` is accepted too). Without arguments the crate containing the test module is analyzed; declared `locations` replace it as the import root (Java: the union of declared locations). `import_options` entries are expressions (unit structs like `DoNotIncludeTests`, or any `ImportOption` value) |
 | `@AnalyzeClasses` as a meta-annotation | — | unsupported | Attribute macros cannot be aliased; use a `macro_rules!` wrapper |
-| `@ArchTest` on a `static ArchRule` field | `#[arch_test] fn rule() -> impl ArchRule` | P4 | Rust statics cannot hold runtime-built trait objects ergonomically |
-| `@ArchTest` on a `static void method(JavaClasses)` | `#[arch_test] fn rule(items: &RustItems)` | P4 | |
-| `@ArchTest ArchTests.in(OtherRules.class)` | `#[arch_test] arch_tests!(in other_rules)` / `ArchTests::in_(other_rules::rules)` | P4 | `other_rules` is a module annotated with `#[arch_rules]` (no import config); its rules are evaluated against the enclosing `#[analyze_classes]` import |
-| `@ArchIgnore(reason)` | `#[arch_ignore(reason = "..")]` → `#[ignore = ".."]` | P4 | |
-| `@ArchTag("x")` | `#[arch_tag("x")]` | P4 partial | Recorded in the generated test name suffix (`__tag_x`) so `cargo test x` selects it; no native tagging in `cargo test` |
-| `CacheMode.FOREVER` / `PER_CLASS` | `CacheMode::Forever` / `PerClass` | P4 | `Forever` = process-wide cache keyed by import configuration; `PerClass` = per-module `OnceLock`. No soft references |
-| `LocationProvider` | `trait LocationProvider { fn get(test_module: &str) -> Vec<Location> }` | P4 | |
+| `@ArchTest` on a `static ArchRule` field | `#[arch_test] fn rule() -> impl ArchRule` | done | Rust statics cannot hold runtime-built trait objects; the attribute reports a compile error on anything but a function. `#[arch_test(items = provider_fn)]` names an explicit items provider `[rust-only]`; outside an `#[analyze_classes]` module the crate under test is imported with the defaults `[rust-only]` |
+| `@ArchTest` on a `static void method(JavaClasses)` | `#[arch_test] fn rule(items: &RustItems)` | done | |
+| `@ArchTest ArchTests.in(OtherRules.class)` | `#[arch_test] fn shared() -> ArchTests { ArchTests::in_(other_rules::arch_tests) }` | done | `other_rules` is an inline module annotated with `#[arch_rules]` (no import config) that gains `pub fn arch_tests() -> ArchTests`; its rules are evaluated against the enclosing `#[analyze_classes]` import. `cargo test` cannot create tests dynamically, so one `#[test]` runs every included rule and panics with the combined reports (`N of M arch tests in \`module\` failed:` + `[name]` sections); `ArchTests::evaluate(&items)` returns them as `(name, message)` pairs |
+| `@ArchIgnore(reason)` | `#[arch_ignore(reason = "..")]` / `#[arch_ignore("..")]` / `#[arch_ignore]` → `#[ignore = ".."]` | done | Works before or after `#[arch_test]`; inside `#[arch_rules]` the case is skipped and reported by `ArchTestCase::ignore_reason()` |
+| `@ArchTag("x")` | `#[arch_tag("x", ..)]` | partial | Appended to the generated test name (`rule__tag_x`) so `cargo test __tag_x` selects every tagged rule; `cargo test` has no native tagging. Inside `#[arch_rules]` tags are kept on `ArchTestCase::tags()` |
+| `CacheMode.FOREVER` / `PER_CLASS` | `CacheMode::Forever` / `PerClass` | done | `Forever` (default) = process-wide cache keyed by crate dir, packages, packages_of, items, location paths, `whole_workspace` and the import option types; `PerClass` = the module's `OnceLock` only. No soft references; `harness::clear_cache()` / `cached_imports()` are `[rust-only]` |
+| `LocationProvider` | `trait LocationProvider { fn get(&self, test_module: &str) -> Vec<Location> }` (closures implement it) | done | The macro instantiates the named type with `Default::default()` (Java: public default constructor); `Location::of(path)` accepts a crate directory, a source directory or a file |
 | `junit.testFilter` | — | unsupported | Use `cargo test <name>` |
 | `junit.displayName.replaceUnderscoresBySpaces` | — | unsupported | `cargo test` names are identifiers |
 | JUnit 4 `ArchUnitRunner`, JUnit 6 engine | — | unsupported | Not applicable |
-| plain-function API (no macros) | `archunit::harness::analyze_classes().packages(&[..]).import_options(..).cache_mode(..).import() -> Arc<RustItems>` with the same cache | P4 | |
+| plain-function API (no macros) | `archunit::harness::analyze_classes().packages(&[..]).packages_of(..).items(..).locations(provider).whole_workspace(b).import_option(opt).cache_mode(..).import() -> Arc<RustItems>` with the same cache | done | `crate_dir(path)` and `for_test_module(module_path!())` are `[rust-only]` |
 
 ---
 
@@ -678,20 +678,21 @@ named `harness`; every annotation keeps its ArchUnit name.
 
 | Java (`archunit.properties`) | `archunit.toml` | Status | Note |
 |---|---|---|---|
-| file at classpath root | `archunit.toml` in the crate root (searched upward to the workspace root) | P4 | |
-| `-Darchunit.key=value` override | `ARCHUNIT_KEY=value` environment variable (`.` and `-` → `_`, upper-cased) | P4 | |
-| `ArchConfiguration.get()` / `getProperty` / `setProperty` / `containsProperty` / `getPropertyOrDefault` / `getSubProperties` / `reset` / `withThreadLocalScope` | `ArchConfiguration::get()` (global, `RwLock`) / `property` / `set_property` / `contains_property` / `property_or_default` / `sub_properties` / `reset` / `with_thread_local_scope` | partial | Programmatic API done; loading from `archunit.toml` follows in P4 |
-| `resolveMissingDependenciesFromClassPath` | `resolve_missing_dependencies_from_classpath` (default `false`) | partial | When `true`, missing items from dependency crates are parsed from the cargo registry checkout. Default differs from Java (`true`) because parsing large crates is slow; `std`/`core`/`alloc` are always stubs |
-| `classResolver` / `classResolver.args` (`SelectedClassResolverFromClasspath`) | `class_resolver.packages = ["tokio..", "serde.."]` | P4 | Only the "selected packages" resolver; no custom resolver by class name |
-| `import.dependencyResolutionProcess.maxIterationsFor{MemberTypes,AccessesToTypes,Supertypes,PermittedSubclasses,EnclosingTypes,AnnotationTypes,GenericSignatureTypes}` | `[import.dependency_resolution_process] max_iterations_for_member_types`, … | P4 | Same defaults; `permitted_subclasses` accepted and ignored |
+| file at classpath root | `archunit.toml` next to the `Cargo.toml` of the crate under test (`CARGO_MANIFEST_DIR`), searched upward to the workspace root | done | Nested tables flatten to dotted keys, arrays to comma-separated values; `ArchConfiguration::load_from(path)` loads another file `[rust-only]` |
+| `-Darchunit.key=value` override | `ARCHUNIT_KEY=value` environment variable (`.` and `-` → `_`, upper-cased; `config::environment_variable_name(key)`) | done | Checked on every `property(..)` lookup, so it also overrides values set programmatically; `sub_properties` applies it to known keys only |
+| `ArchConfiguration.get()` / `getProperty` / `setProperty` / `removeProperty` / `containsProperty` / `getPropertyOrDefault` / `getSubProperties` / `reset` / `withThreadLocalScope` | `ArchConfiguration::get()` (global, `RwLock`) / `property` / `set_property` / `remove_property` / `contains_property` / `property_or_default` / `sub_properties` / `reset` / `with_thread_local_scope` | done | `get()` returns a snapshot; setters are associated functions acting on the effective scope |
+| `resolveMissingDependenciesFromClassPath` | `resolve_missing_dependencies_from_classpath` (default `false`); `CrateImporter::new()` reads it | partial | When `true`, dependency crates (path, git and registry checkouts) are parsed. Default differs from Java (`true`) because parsing large crates is slow; `std`/`core`/`alloc` are always stubs |
+| `classResolver` / `classResolver.args` (`SelectedClassResolverFromClasspath`) | `[class_resolver] packages = ["tokio..", "serde.."]` | done | Only the "selected crates" resolver: with `resolve_missing_dependencies_from_classpath = true`, dependency crates whose lib name matches one of the identifiers are parsed, the others stubbed. No custom resolver by class name |
+| `import.dependencyResolutionProcess.maxIterationsFor{MemberTypes,AccessesToTypes,Supertypes,PermittedSubclasses,EnclosingTypes,AnnotationTypes,GenericSignatureTypes}` | — | unsupported | The source importer resolves every name in one pass over the parsed crates; there is no iterative class-file resolution to bound. The keys are accepted and ignored |
 | `enableMd5InClassSources` | — | unsupported | No class files |
-| `archRule.failOnEmptyShould` | `[arch_rule] fail_on_empty_should` (default `true`); `ArchConfiguration::set_fail_on_empty_should(..)` | partial | Programmatic API done; the TOML key follows in P4 |
+| `archRule.failOnEmptyShould` | `[arch_rule] fail_on_empty_should` (default `true`); `ArchConfiguration::set_fail_on_empty_should(..)` | done | |
 | `failureDisplayFormat` | — (programmatic only) | partial | |
 | `extension.<id>.enabled` / `extension.<id>.<prop>` | `[extension.<id>] enabled`, … | deferred | |
-| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | partial | Read via `ArchConfiguration::max_number_of_cycles_to_detect()` / `max_number_of_dependencies_per_edge()`; settable programmatically now, from the TOML file in P4 |
+| `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | done | Read via `ArchConfiguration::max_number_of_cycles_to_detect()` / `max_number_of_dependencies_per_edge()` |
 | `freeze.*` | `[freeze] …` (see §5.6) | P5 | |
 | `junit.*` | — | unsupported | see §6 |
-| `[rust-only]` | `[import] include_targets = ["lib", "bin", "test", "example", "bench"]`, `[import] exclude_binaries_from_coding_rules = true`, `[report] item_prefix = "Item"` (allows `Struct`/`Trait`/… kind prefixes instead of the generic `Item`) | P4/P5 | |
+| `[rust-only]` | `[import] include_targets = ["lib", "proc-macro", "bin", "test", "example", "bench"]` (default: all) | done | Applied by `CrateImporter::new()` as an import option |
+| `[rust-only]` | `[import] exclude_binaries_from_coding_rules = true`, `[report] item_prefix = "Item"` (allows `Struct`/`Trait`/… kind prefixes instead of the generic `Item`) | P5 | |
 
 ---
 
@@ -796,6 +797,35 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 * **Package identifiers** accept a single `.` as an alias for `::`, so `..app.(*)..` from the
   brief and the user guide works without translation.
 
+### Phase 4
+
+* **Macros rewrite, the harness runs.** `#[analyze_classes]` on an inline module adds a hidden
+  `__archunit_items()` provider (a `OnceLock` per module) and turns every inner `#[arch_test]`
+  into `#[::archunit::harness::arch_test(items = __archunit_items)]`, so the expansion of a
+  rule never depends on how the user imported the attribute. `#[arch_test]` keeps the rule
+  function under a hidden name (`__archunit_rule_<name>`) and generates `#[test] fn <name>()`;
+  the return value is dispatched through `harness::ArchTestRunnable`, implemented for every
+  `ArchRule` and for `ArchTests`, which is how one attribute serves `-> impl ArchRule`,
+  `-> ArchTests` and `(items: &RustItems)`.
+* **`ArchTests` are one test.** JUnit registers each included rule as a test of its own;
+  `cargo test` cannot, so `ArchTests::check` runs all cases and panics with every failure.
+  Ignored cases are skipped silently (Java reports them as skipped tests).
+* **`#[arch_tag]` renames.** Tags become the `__tag_<name>` suffix of the test function, the
+  only hook `cargo test <filter>` offers. The rule function keeps its name only inside
+  `#[arch_rules]` modules, where nothing is generated per rule.
+* **Import scope.** With no arguments the crate of `CARGO_MANIFEST_DIR` is imported (Java:
+  the whole classpath), sibling workspace members become stubs. `packages`/`packages_of`/`items`
+  import the workspace and filter by name; `locations` replace the crate as import roots and
+  are matched by path prefix (a crate directory, a source directory, or a file);
+  `whole_workspace = true` wins over everything, like `wholeClasspath`.
+* **`archunit.toml` replaces `archunit.properties`.** Keys are the Java keys in snake case
+  with tables for the dotted prefixes; every lookup consults `ARCHUNIT_<KEY>` first, the
+  counterpart of `-Darchunit.<key>`. The importer reads
+  `resolve_missing_dependencies_from_classpath`, `class_resolver.packages` and the rust-only
+  `import.include_targets` when it is constructed, so a thread-local scope covers it.
+* The `import.dependency_resolution_process.*` keys are `unsupported` (accepted, ignored):
+  there is nothing iterative to bound in a source import.
+
 ## 10. Phase status log
 
 | Phase | Status | Summary |
@@ -804,6 +834,6 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 | 1 | done | Importer (`cargo_metadata` + `syn`), name resolution across modules/crates incl. re-exports and globs, domain model with members, accesses, dependencies; fixtures `layered_app`, `onion_app`, `cyclic_app`, `reexports_app`; 35 tests |
 | 2 | done | `ArchRule`, `ArchCondition`/`ConditionLogic`, events, `EvaluationResult`/`FailureReport` in ArchUnit's format, ignore patterns, `ArchConfiguration` (programmatic), all `ArchConditions`, the full `classes()`/`no_classes()`/`the_class()`/members/`all()` syntax; 25 lang tests incl. golden reports |
 | 3 | done | `library::architectures` (layered + onion), `library::dependencies` (slices, `be_free_of_cycles`, `not_depend_on_each_other`, `ignore_dependency`), `library::cycle_detection` (Johnson/Tarjan port, `CycleArchCondition`), cycle configuration properties; 24 library tests incl. golden reports for layered, onion, simple cycle, simple scenario and controller slices |
-| 4 | pending | |
+| 4 | done | `archunit-macros` (`#[analyze_classes]`, `#[arch_test]`, `#[arch_rules]`, `#[arch_ignore]`, `#[arch_tag]`), `archunit::harness` (`analyze_classes()` builder, `CacheMode`, `LocationProvider`, `ArchTests`, cache), `archunit.toml` + `ARCHUNIT_*` overrides with importer settings; 11 harness tests (macro-generated) + 5 config tests |
 | 5 | pending | |
 | 6 | pending | |

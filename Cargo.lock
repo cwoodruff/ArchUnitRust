@@ -15,6 +15,7 @@ dependencies = [
 name = "archunit"
 version = "0.1.0"
 dependencies = [
+ "archunit-macros",
  "cargo_metadata",
  "proc-macro2",
  "quote",
@@ -23,6 +24,15 @@ dependencies = [
  "syn 2.0.119",
  "thiserror",
  "toml",
+]
+
+[[package]]
+name = "archunit-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]

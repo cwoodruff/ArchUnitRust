@@ -36,10 +36,17 @@ impl Location {
         }
     }
 
-    /// A location for an arbitrary path, for use in custom import options and tests.
+    /// A location for an arbitrary path (a source file or a crate directory), for use in
+    /// custom import options, [`LocationProvider`](crate::harness::LocationProvider)s and tests.
+    /// The crate directory is the nearest directory containing a `Cargo.toml`.
     pub fn of(path: impl AsRef<Path>) -> Self {
         let path = path.as_ref().to_path_buf();
-        let crate_dir = path.parent().map(Path::to_path_buf).unwrap_or_default();
+        let crate_dir = path
+            .ancestors()
+            .find(|dir| dir.join("Cargo.toml").is_file())
+            .map(Path::to_path_buf)
+            .or_else(|| path.parent().map(Path::to_path_buf))
+            .unwrap_or_default();
         Self::new(path, crate_dir, String::new(), TargetKind::Lib, false, true)
     }
 

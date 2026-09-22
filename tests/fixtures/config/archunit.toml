@@ -1,0 +1,19 @@
+# Fixture for tests/config.rs: every key ArchUnit's archunit.properties knows, in TOML form.
+resolve_missing_dependencies_from_classpath = true
+
+[arch_rule]
+fail_on_empty_should = false
+
+[cycles]
+max_number_to_detect = 7
+max_number_of_dependencies_per_edge = 3
+
+[class_resolver]
+packages = ["fixture_macros", "serde.."]
+
+[import]
+include_targets = ["lib", "bin"]
+
+[extension.my_extension]
+enabled = true
+threshold = 2.5

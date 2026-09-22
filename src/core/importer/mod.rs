@@ -27,10 +27,16 @@ use crate::core::domain::{PackageMatcher, RustItems};
 ///     .with_import_option(DoNotIncludeTests)
 ///     .import_path("path/to/my_crate");
 /// ```
-#[derive(Default)]
 pub struct CrateImporter {
     options: Vec<Box<dyn ImportOption>>,
     resolve_dependencies_from_classpath: bool,
+    resolve_only_crates: Vec<PackageMatcher>,
+}
+
+impl Default for CrateImporter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl std::fmt::Debug for CrateImporter {
@@ -46,9 +52,29 @@ impl std::fmt::Debug for CrateImporter {
 }
 
 impl CrateImporter {
-    /// A new importer with no options.
+    /// A new importer; `resolve_missing_dependencies_from_classpath`, `class_resolver.packages`
+    /// and `import.include_targets` come from [`ArchConfiguration`](crate::config::ArchConfiguration).
     pub fn new() -> Self {
-        Self::default()
+        let configuration = crate::config::ArchConfiguration::get();
+        let mut options: Vec<Box<dyn ImportOption>> = Vec::new();
+        let include_targets = configuration.include_targets();
+        if !include_targets.is_empty() {
+            options.push(Box::new(move |location: &Location| {
+                include_targets
+                    .iter()
+                    .any(|kind| location.target().kind_name() == kind)
+            }));
+        }
+        Self {
+            options,
+            resolve_dependencies_from_classpath: configuration
+                .resolve_missing_dependencies_from_classpath(),
+            resolve_only_crates: configuration
+                .class_resolver_packages()
+                .iter()
+                .map(|id| PackageMatcher::of(id))
+                .collect(),
+        }
     }
 
     /// Adds an [`ImportOption`] (`withImportOption(..)`).
@@ -102,6 +128,7 @@ impl CrateImporter {
             sources.extend(cargo::discover(
                 path,
                 self.resolve_dependencies_from_classpath,
+                &self.resolve_only_crates,
             )?);
         }
         build::build(self, sources, "classes")

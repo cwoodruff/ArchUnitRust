@@ -98,6 +98,18 @@ impl TargetKind {
     pub fn is_binary(&self) -> bool {
         matches!(self, TargetKind::Bin(_))
     }
+
+    /// The cargo kind name: `lib`, `proc-macro`, `bin`, `test`, `example` or `bench`.
+    pub fn kind_name(&self) -> &'static str {
+        match self {
+            TargetKind::Lib => "lib",
+            TargetKind::ProcMacro => "proc-macro",
+            TargetKind::Bin(_) => "bin",
+            TargetKind::Test(_) => "test",
+            TargetKind::Example(_) => "example",
+            TargetKind::Bench(_) => "bench",
+        }
+    }
 }
 
 /// An item of Rust code: a struct, enum, union, trait, function, impl block, module, type

@@ -13,6 +13,7 @@
 pub mod base;
 pub mod config;
 pub mod core;
+pub mod harness;
 pub mod lang;
 pub mod library;
 
@@ -23,7 +24,11 @@ pub mod prelude {
         Dependency, PackageMatcher, RustAccess, RustItem, RustItems, RustMember, RustModifier,
         RustModule,
     };
+    pub use crate::core::importer::import_option::{DoNotIncludeTests, OnlyIncludeTests};
     pub use crate::core::importer::{CrateImporter, ImportOption, Location};
+    pub use crate::harness::{
+        ArchTests, CacheMode, analyze_classes, arch_ignore, arch_rules, arch_tag, arch_test,
+    };
     pub use crate::lang::syntax::{
         ArchRuleDefinition, all, classes, code_units, constructors, fields, members, methods, no,
         no_class, no_classes, no_code_units, no_constructors, no_fields, no_members, no_methods,

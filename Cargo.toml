@@ -11,10 +11,11 @@ keywords = ["architecture", "testing", "archunit", "dependencies", "layers"]
 categories = ["development-tools::testing"]
 
 [workspace]
-members = ["."]
+members = [".", "archunit-macros"]
 exclude = ["tests/fixtures"]
 
 [dependencies]
+archunit-macros = { path = "archunit-macros", version = "0.1.0" }
 cargo_metadata = "0.23"
 proc-macro2 = { version = "1", features = ["span-locations"] }
 quote = "1"
