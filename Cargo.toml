@@ -1,0 +1,28 @@
+[package]
+name = "archunit"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "ArchUnit for Rust: check the architecture of a crate with rules expressed as tests"
+license = "Apache-2.0"
+repository = "https://github.com/cwoodruff/ArchUnitRust"
+readme = "README.md"
+keywords = ["architecture", "testing", "archunit", "dependencies", "layers"]
+categories = ["development-tools::testing"]
+
+[workspace]
+members = ["."]
+exclude = ["tests/fixtures"]
+
+[dependencies]
+cargo_metadata = "0.23"
+proc-macro2 = { version = "1", features = ["span-locations"] }
+quote = "1"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+syn = { version = "2", features = ["full", "visit", "extra-traits"] }
+thiserror = "2"
+toml = "1"
+
+[lints.rust]
+missing_debug_implementations = "warn"

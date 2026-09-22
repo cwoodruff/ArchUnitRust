@@ -155,6 +155,9 @@ built once after import, exactly like ArchUnit's `ReverseDependencies`.
   in a workspace import and matches `std::any::type_name`.
 * The literal pattern segment `crate` matches any crate root, so `crate::domain..` works in
   every rule and in `archunit.toml` regardless of the crate name.
+* Public re-export paths are recorded as aliases: `items.get("my_app::Order")` finds
+  `my_app::domain::model::Order` when `lib.rs` has `pub use domain::model::Order`, and
+  `ItemSelector` names match aliases too. Reports always print the canonical name.
 * Failure lines therefore read
   `Item <my_app::domain::order::Order> depends on <my_app::infrastructure::db::Pool> in (src/domain/order.rs:14)`.
   **Open question for review:** the brief's example shows `<crate::domain::order::Order>`.

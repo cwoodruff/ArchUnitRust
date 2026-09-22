@@ -58,173 +58,173 @@ They never replace an ArchUnit name.
 
 | Java (`core.importer`) | Rust (`archunit::core::importer`) | Status | Note |
 |---|---|---|---|
-| `ClassFileImporter` | `CrateImporter` | P1 | Parses source with `syn`; crate graph from `cargo_metadata` |
-| `new ClassFileImporter()` | `CrateImporter::new()` | P1 | |
-| `withImportOption(ImportOption)` | `with_import_option(impl ImportOption)` | P1 | |
-| `withImportOptions(Collection)` | `with_import_options(Vec<Box<dyn ImportOption>>)` | P1 | |
-| `importClasspath()` | `import_workspace()` | P1 | Every workspace member plus (optionally) dependency crates. Name kept close to the concept: the "classpath" of a Rust build is the cargo dependency graph |
-| `importPackages(String...)` | `import_packages(&[&str])` | P1 | Module identifiers, e.g. `"my_app::domain.."`; imports the crates that own those modules and keeps only matching modules |
-| `importPackagesOf(Class...)` | `import_packages_of(&[&str])` | P1 | Modules containing the named items |
-| `importPackage(String)` | `import_package(&str)` | P1 | |
-| `importClasses(Class...)` | `import_items(&[&str])` | P1 | Named items only (plus stubs for their targets) |
-| `importClass(Class)` | `import_item(&str)` | P1 | |
-| `importPath(Path)` / `importPaths(..)` | `import_path(impl AsRef<Path>)` / `import_paths(..)` | P1 | Path to a `Cargo.toml`, a crate directory, or a workspace root |
+| `ClassFileImporter` | `CrateImporter` | done | Parses source with `syn`; crate graph from `cargo_metadata` |
+| `new ClassFileImporter()` | `CrateImporter::new()` | done | |
+| `withImportOption(ImportOption)` | `with_import_option(impl ImportOption)` | done | |
+| `withImportOptions(Collection)` | `with_import_options(Vec<Box<dyn ImportOption>>)` | done | |
+| `importClasspath()` | `import_workspace()` | done | Every workspace member plus (optionally) dependency crates. Name kept close to the concept: the "classpath" of a Rust build is the cargo dependency graph |
+| `importPackages(String...)` | `import_packages(&[&str])` | done | Module identifiers, e.g. `"my_app::domain.."`; imports the crates that own those modules and keeps only matching modules |
+| `importPackagesOf(Class...)` | `import_packages_of(&[&str])` | done | Modules containing the named items |
+| `importPackage(String)` | `import_package(&str)` | done | |
+| `importClasses(Class...)` | `import_items(&[&str])` | done | Named items only (plus stubs for their targets) |
+| `importClass(Class)` | `import_item(&str)` | done | |
+| `importPath(Path)` / `importPaths(..)` | `import_path(impl AsRef<Path>)` / `import_paths(..)` | done | Path to a `Cargo.toml`, a crate directory, or a workspace root |
 | `importUrl` / `importUrls` | — | unsupported | No URL sources for Rust code |
 | `importJar` / `importJars` | — | unsupported | No archive format; use `import_path` on an extracted crate |
-| `importLocations(Collection<Location>)` | `import_locations(&[Location])` | P1 | |
-| `Location` | `Location` | P1 | A source file path plus its crate and cargo target |
-| `Location.of(Path/URL/URI/JarFile)` | `Location::of(path)` | P1 | Only paths |
-| `Location.contains(String)` / `matches(Pattern)` | `contains(&str)` / `matches(&Regex)` | P1 | |
+| `importLocations(Collection<Location>)` | `import_locations(&[Location])` | done | |
+| `Location` | `Location` | done | A source file path plus its crate and cargo target |
+| `Location.of(Path/URL/URI/JarFile)` | `Location::of(path)` | done | Only paths |
+| `Location.contains(String)` / `matches(Pattern)` | `contains(&str)` / `matches(&Regex)` | done | |
 | `Location.isJar()` / `isArchive()` | — | unsupported | Always false; not provided |
-| `ImportOption` (interface) | `trait ImportOption { fn includes(&self, location: &Location) -> bool }` | P1 | Also implemented for closures `Fn(&Location) -> bool` |
-| `ImportOption.Predefined.DO_NOT_INCLUDE_TESTS` / `DoNotIncludeTests` | `import_option::DoNotIncludeTests` | P1 | Excludes `#[cfg(test)]` modules and items, `#[test]` functions, the `tests/` directory, and `test` cargo targets |
-| `DO_NOT_INCLUDE_JARS` / `DoNotIncludeJars` | `import_option::DoNotIncludeDependencies` | P1 | Excludes crates that are not workspace members (registry, git, path deps outside the workspace) |
-| `DO_NOT_INCLUDE_ARCHIVES` | `DoNotIncludeDependencies` | P1 | Same as above (no archive/jar distinction in Rust) |
+| `ImportOption` (interface) | `trait ImportOption { fn includes(&self, location: &Location) -> bool }` | done | Also implemented for closures `Fn(&Location) -> bool` |
+| `ImportOption.Predefined.DO_NOT_INCLUDE_TESTS` / `DoNotIncludeTests` | `import_option::DoNotIncludeTests` | done | Excludes `#[cfg(test)]` modules and items, `#[test]` functions, the `tests/` directory, and `test` cargo targets |
+| `DO_NOT_INCLUDE_JARS` / `DoNotIncludeJars` | `import_option::DoNotIncludeDependencies` | done | Excludes crates that are not workspace members (registry, git, path deps outside the workspace) |
+| `DO_NOT_INCLUDE_ARCHIVES` | `DoNotIncludeDependencies` | done | Same as above (no archive/jar distinction in Rust) |
 | `DO_NOT_INCLUDE_PACKAGE_INFOS` | — | unsupported | No `package-info` concept |
-| `ONLY_INCLUDE_TESTS` | `import_option::OnlyIncludeTests` | P1 | |
+| `ONLY_INCLUDE_TESTS` | `import_option::OnlyIncludeTests` | done | |
 | `DoNotIncludeJars`-style custom `ImportOption` classes for `@AnalyzeClasses` | any type implementing `ImportOption` | P4 | |
 | `ImportOptions` (internal) | — | — | internal |
-| `ClassResolver` / `SelectedClassResolverFromClasspath` | `DependencyResolution` config (see §7) | P1 partial | Missing items from dependency crates are stubbed by default; optionally the dependency's source is parsed from the cargo registry checkout |
-| "Dealing with Missing Classes" (stubs) | `RustItem::is_fully_imported()` returns `false` for stubs | P1 | |
+| `ClassResolver` / `SelectedClassResolverFromClasspath` | `CrateImporter::resolving_missing_dependencies_from_classpath(true)` | partial | Missing items from dependency crates are stubbed by default. The option parses every dependency's library target from the cargo registry checkout; it has no per-package selection or iteration limits yet (config in P4) |
+| "Dealing with Missing Classes" (stubs) | `RustItem::is_fully_imported()` returns `false` for stubs | done | |
 
 ### 2.2 Domain model
 
 | Java (`core.domain`) | Rust (`archunit::core::domain`) | Status | Note |
 |---|---|---|---|
-| `JavaClasses` | `RustItems` | P1 | Owns the graph; `IntoIterator<Item=&RustItem>` |
-| `JavaClasses.get(Class/String)` | `get(&str)` / `try_get(&str)` | P1 | |
-| `contain(..)`, `containPackage(..)` | `contain(&str)`, `contain_package(&str)` | P1 | |
-| `that(DescribedPredicate)` | `that(&DescribedPredicate<RustItem>)` | P1 | |
-| `as(String)` / `getDescription()` | `as_(&str)` / `description()` | P1 | |
-| `getDefaultPackage()` / `getPackage(String)` | `default_package()` (the crate roots) / `package(&str)` | P1 | |
-| `JavaClass` | `RustItem` | P1 | struct, enum, union, trait, fn, impl block, mod, type alias, const, static, macro (`macro_rules!`, proc-macro fn), extern crate |
-| `JavaClass.getName()` | `name()` | P1 | Crate-rooted full path `my_app::domain::order::Order`. See PLAN §"Full names" for the `crate::` decision |
-| `getSimpleName()` | `simple_name()` | P1 | Last path segment; `impl` blocks get `impl Trait for Type` / `impl Type` |
-| `getFullName()` | `full_name()` | P1 | Same as `name()` for items |
-| `getPackageName()` / `getPackage()` | `package_name()` / `package()` → `&RustModule` | P1 | The enclosing module path |
-| `getModifiers()` | `modifiers()` → `&[RustModifier]` | P1 | See §2.3 |
-| `isInterface()` / `isEnum()` / `isRecord()` / `isAnnotation()` | `is_trait()` / `is_enum()` / — / `is_proc_macro()` | P1 | `isRecord` unsupported: no record concept (see `[rust-only]` `is_struct()`). `isAnnotation` maps to items that define attribute or derive macros |
-| `isTopLevelClass()` | `is_top_level_item()` | P1 | Declared directly in a module body |
-| `isNestedClass()` / `isLocalClass()` | `is_nested_item()` / `is_local_item()` | P1 | Both mean "declared inside a function body or another item body" |
+| `JavaClasses` | `RustItems` | done | Owns the graph; `IntoIterator<Item=&RustItem>` |
+| `JavaClasses.get(Class/String)` | `get(&str)` / `try_get(&str)` | done | Canonical paths and public re-export paths (`my_app::Order` for `pub use domain::model::Order`) both work; `try_get_any` also finds modules and stubs |
+| `contain(..)`, `containPackage(..)` | `contain(&str)`, `contain_package(&str)` | done | |
+| `that(DescribedPredicate)` | `that(&DescribedPredicate<RustItem>)` | done | |
+| `as(String)` / `getDescription()` | `as_(&str)` / `description()` | done | |
+| `getDefaultPackage()` / `getPackage(String)` | `default_packages()` (one crate root per imported crate) / `package(&str)` | done | |
+| `JavaClass` | `RustItem` | done | struct, enum, union, trait, fn, impl block, mod, type alias, const, static, macro (`macro_rules!`, proc-macro fn), extern crate |
+| `JavaClass.getName()` | `name()` | done | Crate-rooted full path `my_app::domain::order::Order`. See PLAN §"Full names" for the `crate::` decision |
+| `getSimpleName()` | `simple_name()` | done | Last path segment; `impl` blocks get `impl Trait for Type` / `impl Type` |
+| `getFullName()` | `full_name()` | done | Same as `name()` for items |
+| `getPackageName()` / `getPackage()` | `package_name()` / `package()` → `&RustModule` | done | The enclosing module path |
+| `getModifiers()` | `modifiers()` → `&[RustModifier]` | done | See §2.3 |
+| `isInterface()` / `isEnum()` / `isRecord()` / `isAnnotation()` | `is_trait()` / `is_enum()` / — / `is_proc_macro()` | done | `isRecord` unsupported: no record concept (see `[rust-only]` `is_struct()`). `isAnnotation` maps to items that define attribute or derive macros |
+| `isTopLevelClass()` | `is_top_level_item()` | done | Declared directly in a module body |
+| `isNestedClass()` / `isLocalClass()` | `is_nested_item()` / `is_local_item()` | done | Both mean "declared inside a function body or another item body" |
 | `isMemberClass()` / `isInnerClass()` / `isAnonymousClass()` | — | unsupported | Rust has no member/inner/anonymous types; closures are not items |
-| `isArray()` / `isPrimitive()` / `getComponentType()` / `getBaseComponentType()` | `is_primitive()` for `i32`, `bool`, `str`, … ; arrays/slices/references/pointers are unwrapped to their element type when dependencies are recorded | P1 partial | Array-ness is not a property of an item in Rust |
-| `isSealed()` / `getPermittedSubclasses()` | `is_sealed()` / — | P1 partial | `#[non_exhaustive]` enums or traits with a private supertrait are reported sealed; permitted subclasses have no counterpart |
-| `isFullyImported()` | `is_fully_imported()` | P1 | |
-| `getSuperclass()` / `getRawSuperclass()` / `getAllRawSuperclasses()` / `getClassHierarchy()` | `supertraits()` / `all_supertraits()` / `trait_hierarchy()` | P1 partial | Only traits have supertypes in Rust. Struct/enum items return empty |
-| `getInterfaces()` / `getRawInterfaces()` / `getAllRawInterfaces()` | `implemented_traits()` / `all_implemented_traits()` | P1 | From `impl Trait for Type` blocks (in any imported crate) plus derives that resolve to traits |
-| `getSubclasses()` / `getAllSubclasses()` | `implementors()` / `all_implementors()` on traits; `subtraits()` | P1 | |
-| `getAllClassesSelfIsAssignableTo()` | `all_items_self_is_assignable_to()` | P1 | Self plus implemented traits plus their supertraits |
-| `isAssignableTo(..)` / `isAssignableFrom(..)` / `isEquivalentTo(..)` | `is_assignable_to(..)` / `is_assignable_from(..)` / `is_equivalent_to(&str)` | P1 | `assignable_to(T)` = is `T` or implements trait `T` (transitively via supertraits) |
-| `getEnclosingClass()` / `getEnclosingCodeUnit()` | `enclosing_item()` / `enclosing_code_unit()` | P1 | For local items |
-| `getMembers()` / `getAllMembers()` | `members()` / `all_members()` | P1 | `all_` includes trait-provided default items |
-| `getFields()` / `getAllFields()` / `getField(String)` / `tryGetField` | `fields()` / … | P1 | Struct/enum-variant/union fields plus associated consts (see §2.3) |
-| `getMethods()` / `getAllMethods()` / `getMethod(..)` / `tryGetMethod(..)` | `methods()` / … | P1 | Associated functions from inherent and trait impls, and trait method declarations |
-| `getConstructors()` / `getConstructor(..)` / `getAllConstructors()` | `constructors()` / … | P1 partial | Approximation: associated functions with no `self` receiver whose return type is `Self`, `Option<Self>`, `Result<Self, _>`, or the owning type by name. Documented heuristic |
-| `getCodeUnits()` / `getCodeUnitWithParameterTypes(..)` | `code_units()` / `code_unit_with_parameter_types(..)` | P1 | All functions of the item |
+| `isArray()` / `isPrimitive()` / `getComponentType()` / `getBaseComponentType()` | `is_primitive()` for `i32`, `bool`, `str`, … ; arrays/slices/references/pointers are unwrapped to their element type when dependencies are recorded | partial | Array-ness is not a property of an item in Rust |
+| `isSealed()` / `getPermittedSubclasses()` | `is_sealed()` / — | partial | `#[non_exhaustive]` enums or traits with a private supertrait are reported sealed; permitted subclasses have no counterpart |
+| `isFullyImported()` | `is_fully_imported()` | done | |
+| `getSuperclass()` / `getRawSuperclass()` / `getAllRawSuperclasses()` / `getClassHierarchy()` | `supertraits()` / `all_supertraits()` / `trait_hierarchy()` | partial | Only traits have supertypes in Rust. Struct/enum items return empty |
+| `getInterfaces()` / `getRawInterfaces()` / `getAllRawInterfaces()` | `implemented_traits()` / `all_implemented_traits()` | done | From `impl Trait for Type` blocks (in any imported crate) plus derives that resolve to traits |
+| `getSubclasses()` / `getAllSubclasses()` | `implementors()` / `all_implementors()` on traits; `subtraits()` | done | |
+| `getAllClassesSelfIsAssignableTo()` | `all_items_self_is_assignable_to()` | done | Self plus implemented traits plus their supertraits |
+| `isAssignableTo(..)` / `isAssignableFrom(..)` / `isEquivalentTo(..)` | `is_assignable_to(..)` / `is_assignable_from(..)` / `is_equivalent_to(&str)` | done | `assignable_to(T)` = is `T` or implements trait `T` (transitively via supertraits) |
+| `getEnclosingClass()` / `getEnclosingCodeUnit()` | `enclosing_item()` / `enclosing_code_unit()` | done | For local items |
+| `getMembers()` / `getAllMembers()` | `members()` / `all_members()` | done | `all_` includes trait-provided default items |
+| `getFields()` / `getAllFields()` / `getField(String)` / `tryGetField` | `fields()` / … | done | Struct/enum-variant/union fields plus associated consts (see §2.3) |
+| `getMethods()` / `getAllMethods()` / `getMethod(..)` / `tryGetMethod(..)` | `methods()` / … | done | Associated functions from inherent and trait impls, and trait method declarations |
+| `getConstructors()` / `getConstructor(..)` / `getAllConstructors()` | `constructors()` / … | partial | Approximation: associated functions with no `self` receiver whose return type is `Self`, `Option<Self>`, `Result<Self, _>`, or the owning type by name. Documented heuristic |
+| `getCodeUnits()` / `getCodeUnitWithParameterTypes(..)` | `code_units()` / `code_unit_with_parameter_types(..)` | done | All functions of the item |
 | `getStaticInitializer()` | — | unsupported | No static initializers in Rust |
-| `getEnumConstants()` / `getEnumConstant(String)` | `variants()` / `variant(&str)` | P1 | |
-| `getAnnotations()` / `getAnnotationOfType(..)` / `tryGetAnnotationOfType(..)` / `isAnnotatedWith(..)` / `isMetaAnnotatedWith(..)` | `annotations()` / `annotation_of_type(&str)` / `try_annotation_of_type(&str)` / `is_annotated_with(..)` / — | P1 partial | Attributes and derives, see §2.5. Meta-annotation unsupported |
-| `getAnnotationsWithTypeOfSelf()` / `getAnnotationsWithParameterTypeOfSelf()` | `annotations_with_type_of_self()` / — | P1 partial | Only for items that define attribute/derive macros |
-| `getAccessesFromSelf()` / `getAllAccessesFromSelf()` | `accesses_from_self()` / `all_accesses_from_self()` | P1 | See §2.6 |
-| `getAccessesToSelf()` | `accesses_to_self()` | P1 | |
-| `getFieldAccessesFromSelf()` / `getFieldAccessesToSelf()` | `field_accesses_from_self()` / `field_accesses_to_self()` | P1 | |
-| `getMethodCallsFromSelf()` / `getMethodCallsToSelf()` | `method_calls_from_self()` / `method_calls_to_self()` | P1 | |
-| `getConstructorCallsFromSelf()` / `getConstructorCallsToSelf()` | `constructor_calls_from_self()` / `constructor_calls_to_self()` | P1 partial | Calls to functions classified as constructors, plus struct literals `Foo { .. }` and tuple-struct/variant construction `Foo(..)` |
-| `getCodeUnitCallsFromSelf()` / `getCodeUnitCallsToSelf()` | `code_unit_calls_from_self()` / `code_unit_calls_to_self()` | P1 | |
-| `getMethodReferencesFromSelf()` / `..ToSelf()` / `getConstructorReferences..` / `getCodeUnitReferences..` | `function_references_from_self()` / `function_references_to_self()` | P1 | A function path used as a value (`map(Foo::new)`) |
-| `getCodeUnitAccessesFromSelf()` / `..ToSelf()` | `code_unit_accesses_from_self()` / `..to_self()` | P1 | Calls plus references |
-| `getDirectDependenciesFromSelf()` / `getDirectDependenciesToSelf()` | `direct_dependencies_from_self()` / `direct_dependencies_to_self()` | P1 | |
-| `getTransitiveDependenciesFromSelf()` | `transitive_dependencies_from_self()` | P1 | |
-| `getFieldsWithTypeOfSelf()`, `getMethodsWithParameterTypeOfSelf()`, `getMethodsWithReturnTypeOfSelf()`, `getConstructorsWithParameterTypeOfSelf()` | same names, snake_case | P1 | |
-| `getMethodThrowsDeclarationsWithTypeOfSelf()` / `getConstructorsWithThrowsDeclarationTypeOfSelf()` / `getThrowsDeclarations()` | `functions_with_error_type_of_self()` / — / `error_types()` | P1 partial | "throws E" ≙ returns `Result<_, E>`. See §2.7 |
+| `getEnumConstants()` / `getEnumConstant(String)` | `variants()` / `variant(&str)` | done | |
+| `getAnnotations()` / `getAnnotationOfType(..)` / `tryGetAnnotationOfType(..)` / `isAnnotatedWith(..)` / `isMetaAnnotatedWith(..)` | `annotations()` / `annotation_of_type(&str)` / `try_annotation_of_type(&str)` / `is_annotated_with(..)` / — | partial | Attributes and derives, see §2.5. Meta-annotation unsupported |
+| `getAnnotationsWithTypeOfSelf()` / `getAnnotationsWithParameterTypeOfSelf()` | `annotations_with_type_of_self()` / — | partial | Only for items that define attribute/derive macros |
+| `getAccessesFromSelf()` / `getAllAccessesFromSelf()` | `accesses_from_self()` / `all_accesses_from_self()` | done | See §2.6 |
+| `getAccessesToSelf()` | `accesses_to_self()` | done | |
+| `getFieldAccessesFromSelf()` / `getFieldAccessesToSelf()` | `field_accesses_from_self()` / `field_accesses_to_self()` | done | |
+| `getMethodCallsFromSelf()` / `getMethodCallsToSelf()` | `method_calls_from_self()` / `method_calls_to_self()` | done | |
+| `getConstructorCallsFromSelf()` / `getConstructorCallsToSelf()` | `constructor_calls_from_self()` / `constructor_calls_to_self()` | partial | Calls to functions classified as constructors, plus struct literals `Foo { .. }` and tuple-struct/variant construction `Foo(..)` |
+| `getCodeUnitCallsFromSelf()` / `getCodeUnitCallsToSelf()` | `code_unit_calls_from_self()` / `code_unit_calls_to_self()` | done | |
+| `getMethodReferencesFromSelf()` / `..ToSelf()` / `getConstructorReferences..` / `getCodeUnitReferences..` | `function_references_from_self()` / `function_references_to_self()` | done | A function path used as a value (`map(Foo::new)`) |
+| `getCodeUnitAccessesFromSelf()` / `..ToSelf()` | `code_unit_accesses_from_self()` / `..to_self()` | done | Calls plus references |
+| `getDirectDependenciesFromSelf()` / `getDirectDependenciesToSelf()` | `direct_dependencies_from_self()` / `direct_dependencies_to_self()` | done | |
+| `getTransitiveDependenciesFromSelf()` | `transitive_dependencies_from_self()` | done | |
+| `getFieldsWithTypeOfSelf()`, `getMethodsWithParameterTypeOfSelf()`, `getMethodsWithReturnTypeOfSelf()`, `getConstructorsWithParameterTypeOfSelf()` | same names, snake_case | done | |
+| `getMethodThrowsDeclarationsWithTypeOfSelf()` / `getConstructorsWithThrowsDeclarationTypeOfSelf()` / `getThrowsDeclarations()` | `functions_with_error_type_of_self()` / — / `error_types()` | partial | "throws E" ≙ returns `Result<_, E>`. See §2.7 |
 | `getInstanceofChecks()` / `getInstanceofChecksWithTypeOfSelf()` | — | unsupported | No runtime type checks; nearest is `downcast_ref::<T>()`, recorded as a plain dependency |
-| `getReferencedClassObjects()` | `referenced_type_objects()` | P1 partial | `TypeId::of::<T>()`, `size_of::<T>()`, `type_name::<T>()` turbofish uses |
+| `getReferencedClassObjects()` | `referenced_type_objects()` | partial | `TypeId::of::<T>()`, `size_of::<T>()`, `type_name::<T>()` turbofish uses |
 | `getTryCatchBlocks()` / `getTryCatchBlocksThatCatchSelf()` | — | unsupported | No try/catch; `?` and `match` on `Result` are not blocks |
-| `getTypeParameters()` | `type_parameters()` | P1 | Generic params with bounds |
-| `getSource()` / `Source.getMd5sum()` | `source()` → `Option<&Source>` / — | P1 partial | File path and crate; MD5 unsupported (see §7) |
-| `getSourceCodeLocation()` | `source_code_location()` | P1 | |
-| `getDescription()` | `description()` | P1 | `"Class <name>"` becomes `"Item <name>"` (per the agreed failure format); members: `"Method <..>"`, `"Field <..>"`, `"Constructor <..>"` |
+| `getTypeParameters()` | `type_parameters()` | done | Generic params with bounds |
+| `getSource()` / `Source.getMd5sum()` | `source()` → `Option<&Source>` / — | partial | File path and crate; MD5 unsupported (see §7) |
+| `getSourceCodeLocation()` | `source_code_location()` | done | |
+| `getDescription()` | `description()` | done | `"Class <name>"` becomes `"Item <name>"` (per the agreed failure format), modules `"Module <name>"`; members: `"Method <..>"`, `"Field <..>"`, `"Constructor <..>"`, `"Function <..>"` (free functions), `"Variant <..>"` |
 | `reflect()` | — | unsupported | No runtime reflection in Rust |
 | `traverseSignature(SignatureVisitor)` | `traverse_signature(&mut impl SignatureVisitor)` | deferred | Generic-signature visitor; portable but low value |
-| `toErasure()` | `to_erasure()` | P1 | Identity for items |
-| `[rust-only]` | `is_struct()`, `is_union()`, `is_function()`, `is_module()`, `is_type_alias()`, `is_const()`, `is_static()`, `is_macro()`, `is_impl()`, `kind() -> ItemKind` | P1 | |
-| `[rust-only]` | `crate_name()`, `cargo_target()` | P1 | |
-| `JavaPackage` | `RustModule` | P1 | |
-| `JavaPackage.getName()` / `getRelativeName()` | `name()` / `relative_name()` | P1 | |
-| `getClasses()` / `getClassesInPackageTree()` | `items()` / `items_in_package_tree()` | P1 | |
-| `getSubpackages()` / `getSubpackagesInTree()` / `getPackage(String)` / `containsPackage(..)` | `subpackages()` / `subpackages_in_tree()` / `package(&str)` / `contains_package(&str)` | P1 | |
-| `getParent()` | `parent()` | P1 | |
-| `getClass(..)` / `getClassWithFullyQualifiedName` / `getClassWithSimpleName` / `containsClass..` | `item(..)` / `item_with_fully_qualified_name` / `item_with_simple_name` / `contains_item..` | P1 | |
-| `getClassDependenciesFromThisPackage()` / `..ToThisPackage()` / `..FromThisPackageTree()` / `..ToThisPackageTree()` | same names, snake_case, `class` → `item` | P1 | |
-| `getPackageDependenciesFromThisPackage()` / … | same names, snake_case | P1 | |
-| `getPackageInfo()` / `getAnnotations()` / `isAnnotatedWith(..)` | `module_attributes()` / `annotations()` / `is_annotated_with(..)` | P1 partial | Inner attributes of the module (`#![allow(..)]`, `#![doc = ..]`, `#![cfg(..)]`). Custom inner attributes are unstable in Rust, so annotation-based module definitions are limited to built-in attributes |
-| `traversePackageTree(predicate, visitor)` | `traverse_package_tree(pred, &mut visitor)` | P1 | |
-| `JavaPackage.Predicates` / `Functions` | `rust_module::predicates` / `functions` | P1 | |
-| `JavaMember` | `RustMember` | P1 | Field, method (associated fn), variant, associated const, associated type |
-| `JavaMember.getOwner()` / `getName()` / `getFullName()` / `getModifiers()` / `getDescriptor()` | `owner()` / `name()` / `full_name()` / `modifiers()` / — | P1 | `getDescriptor` (JVM descriptor) unsupported |
-| `getAccessesToSelf()` / `getAllInvolvedRawTypes()` | `accesses_to_self()` / `all_involved_raw_types()` | P1 | |
-| `JavaMember.Predicates.declaredIn(..)` | `rust_member::predicates::declared_in(..)` | P1 | |
-| `JavaField` | `RustField` | P1 | Named/tuple field of struct, enum variant or union; associated `const` (modeled as a static field) |
-| `JavaField.getType()` / `getRawType()` | `type_()` / `raw_type()` | P1 | Raw = generics erased, references/arrays unwrapped |
-| `getAccessesToSelf()` | `accesses_to_self()` | P1 | |
-| `JavaCodeUnit` | `RustCodeUnit` | P1 | Free functions, associated functions, trait methods, closures are **not** code units (they belong to their enclosing fn) |
-| `getParameters()` / `getParameterTypes()` / `getRawParameterTypes()` | `parameters()` / `parameter_types()` / `raw_parameter_types()` | P1 | `self` receiver excluded |
-| `getReturnType()` / `getRawReturnType()` | `return_type()` / `raw_return_type()` | P1 | `()` for none |
-| `getThrowsClause()` / `getExceptionTypes()` | `error_types()` | P1 partial | See §2.7 |
-| `getCallsFromSelf()` / `getMethodCallsFromSelf()` / `getConstructorCallsFromSelf()` / `getFieldAccesses()` / `getAccessesFromSelf()` / references | same, snake_case | P1 | |
-| `getCallsOfSelf()` | `calls_of_self()` | P1 | |
-| `isMethod()` / `isConstructor()` | `is_method()` / `is_constructor()` | P1 | |
-| `getParameterAnnotations()` | `parameter_annotations()` | P1 | |
-| `JavaCodeUnit.Predicates.method()` / `constructor()` / `anyParameterThat` / `allParameters` | `rust_code_unit::predicates::{method, constructor, any_parameter_that, all_parameters}` | P1 | |
-| `JavaMethod` | `RustMethod` | P1 | Any function with an owner impl/trait; free functions are `RustItem`s **and** exposed as `RustMethod` with a module owner so `methods()` rules cover them |
+| `toErasure()` | `to_erasure()` | done | Identity for items |
+| `[rust-only]` | `is_struct()`, `is_union()`, `is_function()`, `is_module()`, `is_type_alias()`, `is_const()`, `is_static()`, `is_macro()`, `is_impl()`, `kind() -> ItemKind` | done | |
+| `[rust-only]` | `crate_name()`, `cargo_target()`, `aliases()` (public re-export paths), `visibility()`, `impl_self_type()`, `impl_trait()`, `as_module()`, `as_items()` | done | |
+| `JavaPackage` | `RustModule` | done | |
+| `JavaPackage.getName()` / `getRelativeName()` | `name()` / `relative_name()` | done | |
+| `getClasses()` / `getClassesInPackageTree()` | `items()` / `items_in_package_tree()` | done | |
+| `getSubpackages()` / `getSubpackagesInTree()` / `getPackage(String)` / `containsPackage(..)` | `subpackages()` / `subpackages_in_tree()` / `package(&str)` / `contains_package(&str)` | done | |
+| `getParent()` | `parent()` | done | |
+| `getClass(..)` / `getClassWithFullyQualifiedName` / `getClassWithSimpleName` / `containsClass..` | `item(..)` / `item_with_fully_qualified_name` / `item_with_simple_name` / `contains_item..` | done | |
+| `getClassDependenciesFromThisPackage()` / `..ToThisPackage()` / `..FromThisPackageTree()` / `..ToThisPackageTree()` | same names, snake_case, `class` → `item` | done | |
+| `getPackageDependenciesFromThisPackage()` / … | same names, snake_case | done | |
+| `getPackageInfo()` / `getAnnotations()` / `isAnnotatedWith(..)` | `module_attributes()` / `annotations()` / `is_annotated_with(..)` | partial | Inner attributes of the module (`#![allow(..)]`, `#![doc = ..]`, `#![cfg(..)]`). Custom inner attributes are unstable in Rust, so annotation-based module definitions are limited to built-in attributes |
+| `traversePackageTree(predicate, visitor)` | `traverse_package_tree(pred, &mut visitor)` | done | |
+| `JavaPackage.Predicates` / `Functions` | `rust_module::predicates` / `functions` | done | |
+| `JavaMember` | `RustMember` | done | Field, method (associated fn), variant, associated const, associated type |
+| `JavaMember.getOwner()` / `getName()` / `getFullName()` / `getModifiers()` / `getDescriptor()` | `owner()` / `name()` / `full_name()` / `modifiers()` / — | done | `getDescriptor` (JVM descriptor) unsupported |
+| `getAccessesToSelf()` / `getAllInvolvedRawTypes()` | `accesses_to_self()` / `all_involved_raw_types()` | done | |
+| `JavaMember.Predicates.declaredIn(..)` | `rust_member::predicates::declared_in(..)` | done | |
+| `JavaField` | `RustField` | done | Named/tuple field of struct, enum variant or union; associated `const` (modeled as a static field) |
+| `JavaField.getType()` / `getRawType()` | `type_()` / `raw_type()` | done | Raw = generics erased, references/arrays unwrapped |
+| `getAccessesToSelf()` | `accesses_to_self()` | done | |
+| `JavaCodeUnit` | `RustCodeUnit` | done | Free functions, associated functions, trait methods, closures are **not** code units (they belong to their enclosing fn) |
+| `getParameters()` / `getParameterTypes()` / `getRawParameterTypes()` | `parameters()` / `parameter_types()` / `raw_parameter_types()` | done | `self` receiver excluded |
+| `getReturnType()` / `getRawReturnType()` | `return_type()` / `raw_return_type()` | done | `()` for none |
+| `getThrowsClause()` / `getExceptionTypes()` | `error_types()` | partial | See §2.7 |
+| `getCallsFromSelf()` / `getMethodCallsFromSelf()` / `getConstructorCallsFromSelf()` / `getFieldAccesses()` / `getAccessesFromSelf()` / references | same, snake_case | done | |
+| `getCallsOfSelf()` | `calls_of_self()` | done | |
+| `isMethod()` / `isConstructor()` | `is_method()` / `is_constructor()` | done | |
+| `getParameterAnnotations()` | `parameter_annotations()` | done | |
+| `JavaCodeUnit.Predicates.method()` / `constructor()` / `anyParameterThat` / `allParameters` | `rust_code_unit::predicates::{method, constructor, any_parameter_that, all_parameters}` | done | |
+| `JavaMethod` | `RustMethod` | done | Any function with an owner impl/trait; free functions are `RustItem`s **and** exposed as `RustMethod` with a module owner so `methods()` rules cover them |
 | `JavaMethod.getDefaultValue()` | — | unsupported | Annotation default values do not exist |
-| `JavaConstructor` | `RustConstructor` | P1 partial | Heuristic subset of `RustMethod` (see `getConstructors`) |
+| `JavaConstructor` | `RustConstructor` | partial | Heuristic subset of `RustMethod` (see `getConstructors`) |
 | `JavaStaticInitializer` | — | unsupported | |
-| `JavaParameter` | `RustParameter` | P1 | |
-| `JavaEnumConstant` | `RustVariant` | P1 | |
-| `JavaAnnotation<OWNER>` | `RustAnnotation` | P1 | See §2.5 |
-| `JavaType`, `JavaParameterizedType`, `JavaTypeVariable`, `JavaWildcardType`, `JavaGenericArrayType` | `RustType` enum: `Path`, `Reference`, `Slice`, `Array`, `Tuple`, `TraitObject`, `ImplTrait`, `TypeParam`, `Never`, `Infer`, `Ptr`, `FnPointer` | P1 | Raw erasure via `RustType::to_erasure()` |
-| `JavaModifier` | `RustModifier` | P1 | See §2.3 |
-| `Dependency` | `Dependency` | P1 | `origin_item()`, `target_item()`, `source_code_location()`, `description()`, `kind() [rust-only]` |
-| `Dependency.Predicates.dependency(..)` / `dependencyOrigin(..)` / `dependencyTarget(..)` | `dependency::predicates::{dependency, dependency_origin, dependency_target}` | P1 | |
-| `Dependency.Functions.GET_ORIGIN_CLASS` / `GET_TARGET_CLASS` | `dependency::functions::{get_origin_item, get_target_item}` | P1 | |
-| `Dependency.toTargetClasses(..)` | `Dependency::to_target_items(..)` | P1 | |
+| `JavaParameter` | `RustParameter` | done | |
+| `JavaEnumConstant` | `RustVariant` | done | |
+| `JavaAnnotation<OWNER>` | `RustAnnotation` | done | See §2.5 |
+| `JavaType`, `JavaParameterizedType`, `JavaTypeVariable`, `JavaWildcardType`, `JavaGenericArrayType` | `RustType` enum: `Path`, `Reference`, `Slice`, `Array`, `Tuple`, `TraitObject`, `ImplTrait`, `TypeParam`, `Never`, `Infer`, `Ptr`, `FnPointer` | done | Raw erasure via `RustType::to_erasure()` |
+| `JavaModifier` | `RustModifier` | done | See §2.3 |
+| `Dependency` | `Dependency` | done | `origin_item()`, `target_item()`, `source_code_location()`, `description()`, `kind() [rust-only]` |
+| `Dependency.Predicates.dependency(..)` / `dependencyOrigin(..)` / `dependencyTarget(..)` | `dependency::predicates::{dependency, dependency_origin, dependency_target}` | done | |
+| `Dependency.Functions.GET_ORIGIN_CLASS` / `GET_TARGET_CLASS` | `dependency::functions::{get_origin_item, get_target_item}` | done | |
+| `Dependency.toTargetClasses(..)` | `Dependency::to_target_items(..)` | done | |
 | `Dependency.convertTo(Class)` | — | unsupported | Reflection-based; use `kind()` |
-| `JavaAccess<T>` / `JavaFieldAccess` / `JavaCall` / `JavaMethodCall` / `JavaConstructorCall` / `JavaCodeUnitReference` / `JavaMethodReference` / `JavaConstructorReference` / `JavaCodeUnitAccess` | `RustAccess` enum with variants `FieldAccess`, `MethodCall`, `ConstructorCall`, `FunctionReference` | P1 | See §2.6 |
-| `JavaAccess.getOrigin()` / `getOriginOwner()` / `getTarget()` / `getTargetOwner()` / `getLineNumber()` / `getSourceCodeLocation()` / `getDescription()` / `isDeclaredInLambda()` / `getContainingTryBlocks()` | `origin()` / `origin_owner()` / `target()` / `target_owner()` / `line_number()` / `source_code_location()` / `description()` / `is_declared_in_closure()` / — | P1 | try blocks unsupported |
-| `JavaAccess.Predicates.origin(..)` / `originOwner(..)` / `target(..)` / `targetOwner(..)` / `originOwnerEqualsTargetOwner()` | `rust_access::predicates::{origin, origin_owner, target, target_owner, origin_owner_equals_target_owner}` | P1 | |
-| `JavaFieldAccess.AccessType` (`GET`/`SET`) | `AccessType::{Get, Set}` | P1 | `Set` = assignment target or `&mut` borrow of the field |
-| `AccessTarget` and subtypes (`FieldAccessTarget`, `MethodCallTarget`, `ConstructorCallTarget`, …) | `AccessTarget` enum | P1 | `resolve_member()` returns `Option`/set like Java: unresolved when the target could not be found in the import |
-| `AccessTarget.Predicates.declaredIn(..)` / `constructor()` | `access_target::predicates::{declared_in, constructor}` | P1 | |
-| `SourceCodeLocation` | `SourceCodeLocation` | P1 | `source_item()`, `source_file_name()`, `line_number()`, `Display` = `(src/x.rs:14)` |
-| `Source` | `Source` | P1 partial | `uri()` → file path; `md5sum()` unsupported |
-| `ThrowsClause` / `ThrowsDeclaration` | `ErrorTypes` / `ErrorTypeDeclaration` | P1 partial | See §2.7 |
+| `JavaAccess<T>` / `JavaFieldAccess` / `JavaCall` / `JavaMethodCall` / `JavaConstructorCall` / `JavaCodeUnitReference` / `JavaMethodReference` / `JavaConstructorReference` / `JavaCodeUnitAccess` | `RustAccess` enum with variants `FieldAccess`, `MethodCall`, `ConstructorCall`, `FunctionReference` | done | See §2.6 |
+| `JavaAccess.getOrigin()` / `getOriginOwner()` / `getTarget()` / `getTargetOwner()` / `getLineNumber()` / `getSourceCodeLocation()` / `getDescription()` / `isDeclaredInLambda()` / `getContainingTryBlocks()` | `origin()` / `origin_owner()` / `target()` / `target_owner()` / `line_number()` / `source_code_location()` / `description()` / `is_declared_in_closure()` / — | done | try blocks unsupported |
+| `JavaAccess.Predicates.origin(..)` / `originOwner(..)` / `target(..)` / `targetOwner(..)` / `originOwnerEqualsTargetOwner()` | `rust_access::predicates::{origin, origin_owner, target, target_owner, origin_owner_equals_target_owner}` | done | |
+| `JavaFieldAccess.AccessType` (`GET`/`SET`) | `AccessType::{Get, Set}` | done | `Set` = assignment target or `&mut` borrow of the field |
+| `AccessTarget` and subtypes (`FieldAccessTarget`, `MethodCallTarget`, `ConstructorCallTarget`, …) | `AccessTarget` enum | done | `resolve_member()` returns `Option`/set like Java: unresolved when the target could not be found in the import |
+| `AccessTarget.Predicates.declaredIn(..)` / `constructor()` | `access_target::predicates::{declared_in, constructor}` | done | |
+| `SourceCodeLocation` | `SourceCodeLocation` | partial | `source_file_name()`, `line_number()`, `Display` = `(src/x.rs:14)`; `getSourceClass()` is not provided (the location is a plain value) |
+| `Source` | `Source` | partial | `uri()` → file path; `md5sum()` unsupported |
+| `ThrowsClause` / `ThrowsDeclaration` | `ErrorTypes` / `ErrorTypeDeclaration` | partial | See §2.7 |
 | `InstanceofCheck`, `TryCatchBlock`, `ReferencedClassObject` | — / — / `ReferencedTypeObject` | see above | |
-| `PackageMatcher` / `PackageMatchers` | `PackageMatcher` / `PackageMatchers` | P1 | Same syntax on `::` separators. See §2.4 |
-| `PackageMatcher.match(String)` → `Result.getGroup(int)` / `getNumberOfGroups()` | `match_(&str)` → `Option<MatchResult>`, `group(usize)`, `number_of_groups()` | P1 | |
-| `Formatters` | `formatters` module | P1 | `format_method`, `format_method_simple`, `format_named_predicate` |
+| `PackageMatcher` / `PackageMatchers` | `PackageMatcher` / `PackageMatchers` | done | Same syntax on `::` separators. See §2.4 |
+| `PackageMatcher.match(String)` → `Result.getGroup(int)` / `getNumberOfGroups()` | `match_(&str)` → `Option<MatchResult>`, `group(usize)`, `number_of_groups()` | done | |
+| `Formatters` | `formatters` module | done | `format_method`, `format_method_simple`, `format_named_predicate` |
 | `DomainObjectCreationContext`, `ImportContext`, `DomainPlugin`, `Java14DomainPlugin`, … | — | internal | Not public API |
 
 #### `properties` interfaces
 
 | Java (`core.domain.properties`) | Rust | Status |
 |---|---|---|
-| `HasName` / `HasName.AndFullName` | `trait HasName` / `trait HasFullName` | P1 |
-| `HasName.Predicates.name/nameMatching/nameStartingWith/nameContaining/nameEndingWith` | `has_name::predicates::{name, name_matching, name_starting_with, name_containing, name_ending_with}` | P1 |
-| `HasName.AndFullName.Predicates.fullName/fullNameMatching` | `has_full_name::predicates::{full_name, full_name_matching}` | P1 |
-| `HasName.Functions.GET_NAME/GET_NAMES`, `namesOf(..)` | `has_name::functions::get_name`, `names_of(..)` | P1 |
-| `HasModifiers` / `Predicates.modifier(..)` | `trait HasModifiers` / `has_modifiers::predicates::modifier(..)` | P1 |
-| `CanBeAnnotated` / `Predicates.annotatedWith(..)` / `metaAnnotatedWith(..)` | `trait CanBeAnnotated` / `can_be_annotated::predicates::annotated_with(..)` / — | P1 partial (meta unsupported) |
-| `HasAnnotations` | `trait HasAnnotations` | P1 |
-| `HasOwner` / `Predicates.With.owner(..)` / `Functions.Get.owner()` | `trait HasOwner` / `has_owner::predicates::owner(..)` / `has_owner::functions::owner()` | P1 |
-| `HasParameterTypes` / `Predicates.rawParameterTypes(..)` | `trait HasParameterTypes` / `has_parameter_types::predicates::raw_parameter_types(..)` | P1 |
-| `HasReturnType` / `Predicates.rawReturnType(..)` / `Functions.GET_RETURN_TYPE` | `trait HasReturnType` / `has_return_type::predicates::raw_return_type(..)` / `functions::get_return_type` | P1 |
-| `HasType` / `Predicates.rawType(..)` / `Functions.GET_RAW_TYPE` | `trait HasType` / `has_type::predicates::raw_type(..)` / `functions::get_raw_type` | P1 |
-| `HasThrowsClause` / `Predicates.throwsClauseWithTypes/throwsClauseContainingType/throwsClause` | `trait HasErrorTypes` / `has_error_types::predicates::{error_types, error_types_containing, error_clause}` | P1 partial |
-| `HasSourceCodeLocation` | `trait HasSourceCodeLocation` | P1 |
+| `HasName` / `HasName.AndFullName` | `trait HasName` / `trait HasFullName` | done |
+| `HasName.Predicates.name/nameMatching/nameStartingWith/nameContaining/nameEndingWith` | `has_name::predicates::{name, name_matching, name_starting_with, name_containing, name_ending_with}` | done |
+| `HasName.AndFullName.Predicates.fullName/fullNameMatching` | `has_full_name::predicates::{full_name, full_name_matching}` | done |
+| `HasName.Functions.GET_NAME/GET_NAMES`, `namesOf(..)` | `has_name::functions::get_name`, `names_of(..)` | done |
+| `HasModifiers` / `Predicates.modifier(..)` | `trait HasModifiers` / `has_modifiers::predicates::modifier(..)` | done |
+| `CanBeAnnotated` / `Predicates.annotatedWith(..)` / `metaAnnotatedWith(..)` | `trait CanBeAnnotated` / `can_be_annotated::predicates::annotated_with(..)` / — | partial (meta unsupported) |
+| `HasAnnotations` | `trait HasAnnotations` | done |
+| `HasOwner` / `Predicates.With.owner(..)` / `Functions.Get.owner()` | `trait HasOwner` / `has_owner::predicates::owner(..)` / `has_owner::functions::owner()` | done |
+| `HasParameterTypes` / `Predicates.rawParameterTypes(..)` | `trait HasParameterTypes` / `has_parameter_types::predicates::raw_parameter_types(..)` | done |
+| `HasReturnType` / `Predicates.rawReturnType(..)` / `Functions.GET_RETURN_TYPE` | `trait HasReturnType` / `has_return_type::predicates::raw_return_type(..)` / `functions::get_return_type` | done |
+| `HasType` / `Predicates.rawType(..)` / `Functions.GET_RAW_TYPE` | `trait HasType` / `has_type::predicates::raw_type(..)` / `functions::get_raw_type` | done |
+| `HasThrowsClause` / `Predicates.throwsClauseWithTypes/throwsClauseContainingType/throwsClause` | `trait HasErrorTypes` / `has_error_types::predicates::{error_types, error_types_containing, error_clause}` | partial |
+| `HasSourceCodeLocation` | `trait HasSourceCodeLocation` | done |
 | `HasDescriptor` | — | unsupported (JVM descriptor) |
-| `HasTypeParameters` / `HasUpperBounds` | `trait HasTypeParameters` / `trait HasBounds` | P1 |
-| `CanOverrideDescription` | `trait CanOverrideDescription { fn as_(..) }` | P1 |
+| `HasTypeParameters` / `HasUpperBounds` | `trait HasTypeParameters` / `trait HasBounds` | done |
+| `CanOverrideDescription` | `trait CanOverrideDescription { fn as_(..) }` | done |
 
 ### 2.3 Modifiers
 
@@ -282,21 +282,22 @@ The port keeps both notions.
 | Java dependency source | Rust source | `Dependency` description verb |
 |---|---|---|
 | method call | `Type::func(..)`, `x.method(..)`, `func(..)` | `calls method` |
-| constructor call | call to a constructor-classified function, `Foo { .. }`, `Foo(..)`, `Enum::Variant(..)` | `calls constructor` |
+| constructor call | call to a constructor-classified function, `Foo { .. }`, `Foo(..)`, `Enum::Variant(..)` | `calls constructor`; literal targets are named `Foo { .. }`, `Foo(..)`, `Enum::Variant(..)` in place of Java's `<init>` |
 | field access (get/set) | `x.field`, `x.field = ..`, `&mut x.field`, `Foo { field: .. }` | `gets field` / `sets field` |
 | method/constructor reference | function path as value (`iter.map(Foo::new)`) | `references method` / `references constructor` |
 | field type | struct/enum/union field type | `has type` |
 | parameter type / return type | fn signature | `has parameter of type` / `has return type` |
 | throws declaration | `Result<_, E>` error type | `throws type` |
-| extends | supertrait | `extends` |
-| implements | `impl Trait for Type`, and derives that resolve to traits | `implements` |
+| extends | supertrait | `extends trait` |
+| implements | `impl Trait for Type`, and derives that resolve to traits | `implements trait` |
 | is annotated with | attribute or derive | `is annotated with` |
 | annotation member type | attribute argument path | `has annotation member of type` |
 | type parameter bounds / generic signature | generic bounds, `where` clauses, type arguments | `has type parameter 'T' depending on` / `has generic .. with type argument depending on` |
 | instanceof / class object | `TypeId::of::<T>`, turbofish | `references class object` |
 | — | `use` import | `[rust-only]` `imports` (an unused import still counts; ArchUnit has no import dependency because bytecode has none) |
-| — | type alias target, `const`/`static` type, `impl` self type, trait object `dyn T`, `impl T` | `has type`, `implements` (for `dyn`/`impl` the verb is `references trait`) |
-| — | macro invocation arguments | Best effort: arguments of well-known macros (`println!`, `format!`, `vec!`, `assert!`, `write!`, `matches!`, `dbg!`, `panic!`, `todo!`, `unimplemented!`, `unreachable!`, and any macro whose input parses as comma-separated expressions) are parsed and visited. Unknown macro bodies yield a single `[rust-only]` `invokes macro` dependency on the macro item |
+| — | type alias target, `const`/`static` type, `impl` self type | `has type` |
+| — | path expressions naming a `const`, `static` or type (`let x: T`, `as T`, turbofish, patterns) | `[rust-only]` `references` |
+| — | macro invocation arguments | Best effort: arguments of well-known macros (`println!`, `format!`, `vec!`, `assert!`, `write!`, `matches!`, `dbg!`, `panic!`, `todo!`, `unimplemented!`, `unreachable!`, and any macro whose input parses as comma-separated expressions) are parsed and visited. Every invocation yields a `[rust-only]` `invokes macro` dependency on the macro item (std macros resolve to `std::<name>`) |
 
 Description format (identical to Java, with `Item` in place of `Class`):
 
@@ -323,22 +324,22 @@ matches `fn f() -> io::Result<()>`. Functions that can panic are not considered 
 
 | Java | Rust | Status |
 |---|---|---|
-| `DescribedPredicate<T>` (abstract class) | `struct DescribedPredicate<T>` holding `Arc<dyn Fn(&T) -> bool + Send + Sync>` and a description | P1 |
-| `test(T)` | `test(&T) -> bool` (also `impl Fn(&T) -> bool`) | P1 |
-| `getDescription()` | `description()` | P1 |
-| `as(String, Object...)` | `as_(impl Into<String>)` (use `format!` for args) | P1 |
-| `and(..)` / `or(..)` / `negate()` | `and(..)` / `or(..)` / `negate()` | P1 |
-| `onResultOf(Function)` | `on_result_of(impl Fn(&F) -> T)` (returns `DescribedPredicate<F>`) | P1 |
+| `DescribedPredicate<T>` (abstract class) | `struct DescribedPredicate<T>` holding `Arc<dyn Fn(&T) -> bool + Send + Sync>` and a description | done |
+| `test(T)` | `test(&T) -> bool` (also `impl Fn(&T) -> bool`) | done |
+| `getDescription()` | `description()` | done |
+| `as(String, Object...)` | `as_(impl Into<String>)` (use `format!` for args) | done |
+| `and(..)` / `or(..)` / `negate()` | `and(..)` / `or(..)` / `negate()` | done |
+| `onResultOf(Function)` | `on_result_of(impl Fn(&F) -> T)` (returns `DescribedPredicate<F>`) | done |
 | `forSubtype()` | — | unsupported: no subtyping; not needed because predicates on `RustItem` apply directly. Provided as a no-op for source compatibility |
-| `alwaysTrue()` / `alwaysFalse()` / `equalTo(..)` / `lessThan` / `greaterThan` / `lessThanOrEqualTo` / `greaterThanOrEqualTo` | same, snake_case | P1 |
-| `describe(String, Predicate)` | `describe(&str, impl Fn(&T) -> bool)` | P1 |
-| `doesNot(..)` / `doNot(..)` / `not(..)` | `does_not(..)` / `do_not(..)` / `not(..)` | P1 |
-| static `and(..)`/`or(..)` over iterables | `all_of(..)` / `any_of(..)` **and** `and(..)`/`or(..)` free functions | P1 |
-| `empty()` / `anyElementThat(..)` / `allElements(..)` / `optionalContains(..)` / `optionalEmpty()` | `empty()` / `any_element_that(..)` / `all_elements(..)` / `optional_contains(..)` / `optional_empty()` | P1 |
-| `DescribedFunction` / `ChainableFunction` (`then`, `is`, `as`) | `DescribedFunction<F, T>` with `then(..)`, `is(pred)`, `as_(..)` | P1 |
-| `DescribedIterable` | `DescribedIterable<T>` | P1 |
-| `HasDescription` | `trait HasDescription` | P1 |
-| `ArchUnitException` (+ subclasses) | `ArchUnitError` enum (`thiserror`) | P1 |
+| `alwaysTrue()` / `alwaysFalse()` / `equalTo(..)` / `lessThan` / `greaterThan` / `lessThanOrEqualTo` / `greaterThanOrEqualTo` | same, snake_case | done |
+| `describe(String, Predicate)` | `describe(&str, impl Fn(&T) -> bool)` | done |
+| `doesNot(..)` / `doNot(..)` / `not(..)` | `does_not(..)` / `do_not(..)` / `not(..)` | done |
+| static `and(..)`/`or(..)` over iterables | `all_of(..)` / `any_of(..)` **and** `and(..)`/`or(..)` free functions | done |
+| `empty()` / `anyElementThat(..)` / `allElements(..)` / `optionalContains(..)` / `optionalEmpty()` | `empty()` / `any_element_that(..)` / `all_elements(..)` / `optional_contains(..)` / `optional_empty()` | done |
+| `DescribedFunction` / `ChainableFunction` (`then`, `is`, `as`) | `DescribedFunction<F, T>` with `then(..)`, `is(pred)`, `as_(..)` | done |
+| `DescribedIterable` | `DescribedIterable<T>` | done |
+| `HasDescription` | `trait HasDescription` | done |
+| `ArchUnitException` (+ subclasses) | `ArchUnitError` enum (`thiserror`) | done |
 | `ForwardingCollection/List/Set`, `ClassLoaders`, `ReflectionUtils`, `Suppliers`, `Optionals`, `Predicates`, `MayResolveTypesViaReflection`, `ResolvesTypesViaReflection` | — | internal / JVM-specific |
 
 ---
@@ -677,9 +678,9 @@ named `harness`; every annotation keeps its ArchUnit name.
 | file at classpath root | `archunit.toml` in the crate root (searched upward to the workspace root) | P4 | |
 | `-Darchunit.key=value` override | `ARCHUNIT_KEY=value` environment variable (`.` and `-` → `_`, upper-cased) | P4 | |
 | `ArchConfiguration.get()` / `getProperty` / `setProperty` / `containsProperty` / `getPropertyOrDefault` / `getSubProperties` / `reset` / `withThreadLocalScope` | `ArchConfiguration::get()` (global, `RwLock`) / `property` / `set_property` / `contains_property` / `property_or_default` / `sub_properties` / `reset` / `with_thread_local_scope` | P4 | |
-| `resolveMissingDependenciesFromClassPath` | `resolve_missing_dependencies_from_classpath` (default `false`) | P1 | When `true`, missing items from dependency crates are parsed from the cargo registry checkout. Default differs from Java (`true`) because parsing large crates is slow; `std`/`core`/`alloc` are always stubs |
-| `classResolver` / `classResolver.args` (`SelectedClassResolverFromClasspath`) | `class_resolver.packages = ["tokio..", "serde.."]` | P1 partial | Only the "selected packages" resolver; no custom resolver by class name |
-| `import.dependencyResolutionProcess.maxIterationsFor{MemberTypes,AccessesToTypes,Supertypes,PermittedSubclasses,EnclosingTypes,AnnotationTypes,GenericSignatureTypes}` | `[import.dependency_resolution_process] max_iterations_for_member_types`, … | P1 partial | Same defaults; `permitted_subclasses` accepted and ignored |
+| `resolveMissingDependenciesFromClassPath` | `resolve_missing_dependencies_from_classpath` (default `false`) | partial | When `true`, missing items from dependency crates are parsed from the cargo registry checkout. Default differs from Java (`true`) because parsing large crates is slow; `std`/`core`/`alloc` are always stubs |
+| `classResolver` / `classResolver.args` (`SelectedClassResolverFromClasspath`) | `class_resolver.packages = ["tokio..", "serde.."]` | P4 | Only the "selected packages" resolver; no custom resolver by class name |
+| `import.dependencyResolutionProcess.maxIterationsFor{MemberTypes,AccessesToTypes,Supertypes,PermittedSubclasses,EnclosingTypes,AnnotationTypes,GenericSignatureTypes}` | `[import.dependency_resolution_process] max_iterations_for_member_types`, … | P4 | Same defaults; `permitted_subclasses` accepted and ignored |
 | `enableMd5InClassSources` | — | unsupported | No class files |
 | `archRule.failOnEmptyShould` | `[arch_rule] fail_on_empty_should` (default `true`) | P2 | |
 | `failureDisplayFormat` | — (programmatic only) | P2 partial | |
@@ -687,7 +688,7 @@ named `harness`; every annotation keeps its ArchUnit name.
 | `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | P3 | |
 | `freeze.*` | `[freeze] …` (see §5.6) | P5 | |
 | `junit.*` | — | unsupported | see §6 |
-| `[rust-only]` | `[import] include_targets = ["lib", "bin", "test", "example", "bench"]`, `[import] exclude_binaries_from_coding_rules = true`, `[report] item_prefix = "Item"` (allows `Struct`/`Trait`/… kind prefixes instead of the generic `Item`) | P1/P5 | |
+| `[rust-only]` | `[import] include_targets = ["lib", "bin", "test", "example", "bench"]`, `[import] exclude_binaries_from_coding_rules = true`, `[report] item_prefix = "Item"` (allows `Struct`/`Trait`/… kind prefixes instead of the generic `Item`) | P4/P5 | |
 
 ---
 
@@ -708,12 +709,38 @@ named `harness`; every annotation keeps its ArchUnit name.
 
 ---
 
-## 9. Phase status log
+## 9. Phase notes
+
+### Phase 1
+
+Approximations and limits established in Phase 1 (all documented in rustdoc as well):
+
+* **Modules are packages.** `RustItems` iteration and `classes()` exclude modules; they are
+  reachable through `package(..)`, `modules()` and `RustModule`. `use` declarations become
+  `imports` dependencies of the enclosing module item.
+* **Impl blocks** for imported types are folded into the type (members, `implements trait`
+  dependencies). Impl blocks for foreign types (`impl From<Order> for String`) stay items of
+  their own, named `<impl From<Order> for String>`, and appear in `classes()`.
+* **Free functions** are items *and* single-member code units, so `methods()` rules cover them
+  and their accesses have the function item as origin owner.
+* **Method and field resolution** follows `self`, typed locals, constructor calls, and
+  unique names; unresolved targets are stubs under `<unresolved>` (see PLAN.md §4).
+  Accesses to a type's own members are recorded but, as in ArchUnit, produce no dependency.
+* **Raw types** follow type aliases (`OrderId` → `u64`) one chain deep; dependency records keep
+  the alias as target.
+* **Constructors** are associated functions without `self` returning `Self`, `Option<Self>`,
+  `Result<Self, _>`, `Box/Rc/Arc<Self>`; unresolved `T::new()`/`T::default()` calls count as
+  constructor calls.
+* **`const`/`static` initializers** are not analysed (no static-initializer code unit).
+* **Binary targets** sharing the package name keep the lib's root name; colliding paths keep the
+  library item in the index (documented, rare).
+
+## 10. Phase status log
 
 | Phase | Status | Summary |
 |---|---|---|
 | 0 | done | Research, this mapping, PLAN.md, CLAUDE.md, NOTICE |
-| 1 | pending | |
+| 1 | done | Importer (`cargo_metadata` + `syn`), name resolution across modules/crates incl. re-exports and globs, domain model with members, accesses, dependencies; fixtures `layered_app`, `onion_app`, `cyclic_app`, `reexports_app`; 35 tests |
 | 2 | pending | |
 | 3 | pending | |
 | 4 | pending | |

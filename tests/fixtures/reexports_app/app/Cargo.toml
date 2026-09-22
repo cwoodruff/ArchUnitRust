@@ -1,0 +1,12 @@
+[package]
+name = "reexports_app"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+reexports_dep = { path = "../dep" }
+
+[[bin]]
+name = "reexports_cli"
+path = "src/bin/cli.rs"
