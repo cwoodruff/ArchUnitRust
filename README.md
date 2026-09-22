@@ -271,13 +271,44 @@ one regex per line, exactly as in ArchUnit.
 
 `examples/` ports the rules of `archunit-example` against the fixture crates in
 `tests/fixtures/`; most of them are violated on purpose, and their reports are checked against
-`examples/expected/`:
+`examples/expected/<example>/<rule>.txt`:
 
 ```sh
 cargo run --example layered_architecture      # prints the reports
 cargo test --examples                          # compares them with the expected reports
 cargo test --example architecture_test         # the #[analyze_classes] harness
 ```
+
+| Example | ArchUnit original | Fixture |
+|---|---|---|
+| `layered_architecture`, `layer_dependency_rules`, `naming_convention`, `controller_rules`, `dao_rules`, `methods`, `interface_rules`, `single_class`, `restrict_number_of_classes`, `slices_isolation`, `security`, `third_party_rules` | the `layers` example tests | `layered_app` |
+| `onion_architecture` | `OnionArchitectureTest` (packages and attributes) | `onion_app` |
+| `cyclic_dependency_rules` | `CyclicDependencyRulesTest` | `cyclic_app` |
+| `coding_rules` | `CodingRulesTest`, `DependencyRulesTest`, `ProxyRulesTest` | `coding_app` |
+| `frozen_rules` | `FrozenRulesTest`, with the store committed under `examples/frozen/` | `layered_app` |
+| `plantuml_architecture` | `PlantUmlArchitectureTest` | `layered_app` + `plantuml/layered_app.puml` |
+| `modular_monolith` | Rust-only: `Architectures::modular_monolith()` | `modular_app` |
+| `architecture_test` | the JUnit 5 `@AnalyzeClasses` / `ArchTests.in` tests | `layered_app` |
+
+## Tests
+
+`cargo test` runs the integration tests in `tests/`, one file per area, each against the
+fixture crates and with golden failure reports in `tests/expected/`:
+
+| Test file | Covers |
+|---|---|
+| `base.rs` | `DescribedPredicate`, `PackageMatcher` (ports of the ArchUnit tests) |
+| `importer.rs`, `domain.rs` | the source importer and the domain model against every fixture |
+| `lang.rs` | rule texts, reports, conditions, `EvaluationResult`, configuration |
+| `library.rs` | layered and onion architectures, slices, cycle detection |
+| `modular_monolith.rs` | `Architectures::modular_monolith()`: descriptions, module constraints, API boundaries, cycles, package-derived modules, ignored dependencies, optional modules, containment |
+| `coding_rules.rs`, `plantuml.rs`, `freeze.rs` | the coding rules, the PlantUML parser and condition, freezing rules and the text-file store |
+| `harness.rs`, `config.rs` | the `#[analyze_classes]` macros and `archunit.toml` |
+
+The modular monolith tests use `tests/fixtures/modular_app`: `orders`, `billing`, `inventory`
+and `shared` modules with a public `api` submodule each, where `billing::internal` reaches
+back into `orders` (a cycle) and `orders::api` reaches into `billing::internal` (an API
+bypass). `tests/expected/modular_monolith_violations.txt` holds the resulting report.
 
 ## Notable differences from ArchUnit
 

@@ -906,6 +906,10 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
   `only_have_dependents_where` conditions for the per-module constraints, so its reports have
   the same shape as the layered architecture and slice rules. The `library.modules` API stays
   deferred; if it is ported later the builder should delegate to it.
+* Tests: `tests/modular_monolith.rs` (7 tests, golden report
+  `tests/expected/modular_monolith_violations.txt`) against the `modular_app` fixture, and
+  `examples/modular_monolith.rs` with its expected reports under
+  `examples/expected/modular_monolith/`.
 * As with the layered architecture, module items (which carry the `use` dependencies) are in
   the module their path matches, but `classes()` never yields them, so the origin-side
   constraints (`may only depend on ..`, `through items that ..`) do not report imports; the

@@ -18,7 +18,15 @@ All three must pass before every commit. Stable Rust only, edition 2024.
 
 Fixture crates under `tests/fixtures/` are excluded from the workspace and are never
 compiled by `cargo test`; the importer parses them. If you add a fixture, give its
-`Cargo.toml` an empty `[workspace]` table.
+`Cargo.toml` an empty `[workspace]` table and run `cargo check` inside it once. Fixtures:
+`layered_app`, `onion_app`, `cyclic_app`, `reexports_app`, `coding_app`, `modular_app`,
+`fixture_macros` (the no-op attribute macros), plus `plantuml/` and `config/` data.
+
+Integration tests live in `tests/`, one file per area (`base`, `importer`, `domain`, `lang`,
+`library`, `modular_monolith`, `harness`, `config`, `coding_rules`, `plantuml`, `freeze`).
+Golden reports are compared verbatim; `UPDATE_EXPECTED=1 cargo test` rewrites the ones under
+`tests/expected/` that the tests generate, and `UPDATE_EXPECTED=1 cargo test --examples` the
+ones under `examples/expected/`.
 
 ## Layout
 

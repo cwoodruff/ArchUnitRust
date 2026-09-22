@@ -28,17 +28,26 @@ ArchUnitRust/
 │                              #   #[arch_ignore], #[arch_tag], arch_tests!
 ├── tests/
 │   ├── fixtures/              # standalone crates (each has its own `[workspace]` table)
-│   │   ├── layered_app/       # controller / service / persistence / security / anticorruption
+│   │   ├── fixture_macros/    # no-op attribute and derive macros that give the fixtures "annotations"
+│   │   ├── layered_app/       # controller / service / persistence / security / anticorruption / core
 │   │   ├── onion_app/         # domain::model, domain::service, application, adapter::{cli,persistence,rest}
 │   │   ├── cyclic_app/        # simplecycle, constructorcycle, fieldaccesscycle, inheritancecycle,
 │   │   │                      #   membercycle, simplescenario, complexcycles
 │   │   ├── reexports_app/     # pub use, globs, renames, nested & #[path] modules, cfg(test),
 │   │   │                      #   tests/ dir, a bin target, a workspace dependency crate
-│   │   ├── coding_rules_app/  # println!/unwrap/panic/process::exit/generic errors/deprecated (P5)
-│   │   └── shopping_app/      # PlantUML example (P5/P6)
-│   ├── importer.rs, domain.rs, lang.rs, library.rs, harness.rs, freeze.rs, plantuml.rs
+│   │   ├── coding_app/        # println!/unwrap/panic/process::exit/generic errors/deprecated/unsafe/
+│   │   │                      #   upper packages/proxy calls, plus a bin target
+│   │   ├── modular_app/       # orders / billing / inventory / shared modules with `api` submodules,
+│   │   │                      #   a cycle and an API bypass, `util` outside every module
+│   │   ├── plantuml/          # layered_app.puml, the component diagram of layered_app
+│   │   └── config/            # archunit.toml with every supported key
+│   ├── base.rs, importer.rs, domain.rs, lang.rs, library.rs, modular_monolith.rs, harness.rs,
+│   │   config.rs, coding_rules.rs, plantuml.rs, freeze.rs
 │   └── expected/              # golden failure reports compared verbatim
-├── examples/                  # ported archunit-example rules (P6)
+├── examples/                  # ported archunit-example rules, one program per Java test class
+│   ├── common/mod.rs          #   archunit_example!: main() + one test per rule
+│   ├── expected/<example>/    #   the expected report of every rule
+│   └── frozen/                #   the committed store of examples/frozen_rules.rs
 ├── docs/MAPPING.md, docs/PLAN.md
 ├── CLAUDE.md, NOTICE, LICENSE, README.md
 └── archunit.toml              # (only in examples/fixtures)
@@ -195,8 +204,15 @@ built once after import, exactly like ArchUnit's `ReverseDependencies`.
 * Phase 5: `tests/freeze.rs` (store creation/update/refreeze/line matcher),
   `tests/plantuml.rs` (parser grammar cases from `PlantUmlParserTest` and
   `PlantUmlArchConditionTest`), `tests/coding_rules.rs`.
-* Phase 6: `examples/*.rs` compile and run under `cargo test --examples`, each expected to
-  fail with a report matching `examples/expected/*.txt`.
+* Phase 6: `examples/*.rs` compile and run under `cargo test --examples`, each rule compared
+  with its report in `examples/expected/<example>/<rule>.txt`.
+* After Phase 6: `tests/modular_monolith.rs` covers `Architectures::modular_monolith()`
+  against `tests/fixtures/modular_app` (descriptions, eager module-name validation, the four
+  per-module constraints, the `through items that` API boundary, cycles named
+  `Module '<name>'`, modules derived from a package pattern, ignored dependencies, optional
+  modules, the containment check, use as a boxed `ArchRule`), with the golden report
+  `tests/expected/modular_monolith_violations.txt`; `examples/modular_monolith.rs` shows it
+  in the example style.
 
 ## 4. Known limits of syn-based resolution
 
