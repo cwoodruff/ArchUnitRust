@@ -1,0 +1,3 @@
+Architecture Violation [Priority: HIGH] - Rule 'classes that reside in a package '..controller..' should be public and should have simple name ending with 'Controller' or should be interfaces' was violated (2 times):
+Item <layered_app::controller::WronglyNamed> does not have simple name ending with 'Controller' in (src/controller/mod.rs:51) and Item <layered_app::controller::WronglyNamed> is no interface in (src/controller/mod.rs:51)
+Item <layered_app::controller::marshaller::Marshaller> does not have simple name ending with 'Controller' in (src/controller/marshaller.rs:3) and Item <layered_app::controller::marshaller::Marshaller> is no interface in (src/controller/marshaller.rs:3)

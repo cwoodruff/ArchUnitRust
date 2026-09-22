@@ -24,8 +24,8 @@ pub use annotation::{AnnotationKind, AnnotationValue, RustAnnotation};
 pub use dependency::{Dependency, DependencyKind};
 pub use rust_access::{AccessKind, AccessTarget, AccessType, ResolutionKind, RustAccess};
 pub use rust_member::{
-    MemberKind, Receiver, RustCodeUnit, RustConstructor, RustField, RustMember, RustMethod,
-    RustParameter, RustVariant,
+    CodeUnitLike, MemberKind, MemberLike, Receiver, RustCodeUnit, RustConstructor, RustField,
+    RustMember, RustMethod, RustParameter, RustVariant,
 };
 
 /// `JavaCodeUnit.Predicates`.

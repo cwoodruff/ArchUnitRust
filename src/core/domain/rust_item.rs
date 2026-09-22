@@ -245,16 +245,18 @@ impl RustItem {
 
     /// The path of the enclosing module (`JavaClass.getPackageName()`).
     ///
-    /// For a crate root module this is its own name.
+    /// A module item resides in itself: the `use` declarations it owns belong to that package.
     pub fn package_name(&self) -> String {
         self.package().name()
     }
 
-    /// The enclosing module (`JavaClass.getPackage()`); a crate root module returns itself.
+    /// The enclosing module (`JavaClass.getPackage()`); a module item returns itself.
     pub fn package(&self) -> RustModule {
         match self.data().package {
-            Some(package) => RustModule::new(Arc::clone(&self.graph), package),
-            None => RustModule::new(Arc::clone(&self.graph), self.id),
+            Some(package) if self.kind() != ItemKind::Module => {
+                RustModule::new(Arc::clone(&self.graph), package)
+            }
+            _ => RustModule::new(Arc::clone(&self.graph), self.id),
         }
     }
 
@@ -425,6 +427,24 @@ impl RustItem {
     /// Attributes and derives (`JavaClass.getAnnotations()`).
     pub fn annotations(&self) -> Vec<RustAnnotation> {
         self.data().annotations.clone()
+    }
+
+    /// Whether an attribute or derive matching `selector` is present (`JavaClass.isAnnotatedWith(..)`).
+    pub fn is_annotated_with(
+        &self,
+        selector: impl Into<super::properties::AnnotationSelector>,
+    ) -> bool {
+        CanBeAnnotated::is_annotated_with(self, selector)
+    }
+
+    /// The annotation with the given name (`JavaClass.getAnnotationOfType(..)`); panics if absent.
+    pub fn annotation_of_type(&self, name: &str) -> RustAnnotation {
+        CanBeAnnotated::annotation_of_type(self, name)
+    }
+
+    /// The annotation with the given name, if present (`JavaClass.tryGetAnnotationOfType(..)`).
+    pub fn try_annotation_of_type(&self, name: &str) -> Option<RustAnnotation> {
+        CanBeAnnotated::try_annotation_of_type(self, name)
     }
 
     /// The generic type parameters (`JavaClass.getTypeParameters()`).

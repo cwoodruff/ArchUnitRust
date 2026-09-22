@@ -11,7 +11,9 @@
 //! See `docs/MAPPING.md` in the repository for the mapping of every ArchUnit API to this crate.
 
 pub mod base;
+pub mod config;
 pub mod core;
+pub mod lang;
 
 /// Everything a typical architecture test needs.
 pub mod prelude {
@@ -21,4 +23,12 @@ pub mod prelude {
         RustModule,
     };
     pub use crate::core::importer::{CrateImporter, ImportOption, Location};
+    pub use crate::lang::syntax::{
+        ArchRuleDefinition, all, classes, code_units, constructors, fields, members, methods, no,
+        no_class, no_classes, no_code_units, no_constructors, no_fields, no_members, no_methods,
+        priority, the_class,
+    };
+    pub use crate::lang::{
+        ArchCondition, ArchRule, ConditionEvents, EvaluationResult, Priority, SimpleConditionEvent,
+    };
 }

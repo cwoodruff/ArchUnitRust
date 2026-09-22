@@ -350,61 +350,61 @@ matches `fn f() -> io::Result<()>`. Functions that can panic are not considered 
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `ArchRule` (interface) | `trait ArchRule: HasDescription + Send + Sync` | P2 | Object safe; `Box<dyn ArchRule>` implements it |
-| `check(JavaClasses)` | `check(&RustItems)` | P2 | Panics with the failure report (Rust's `AssertionError`) |
-| `evaluate(JavaClasses)` | `evaluate(&RustItems) -> EvaluationResult` | P2 | |
-| `because(String)` | `because(&str) -> Self` | P2 | Description: `.. because 'reason'` (Java: `", because " + reason`) |
-| `as(String)` | `as_(&str) -> Self` | P2 | |
-| `allowEmptyShould(boolean)` | `allow_empty_should(bool) -> Self` | P2 | |
-| `getDescription()` | `description()` | P2 | |
-| `ArchRule.Assertions.check(rule, classes)` / `assertNoViolation(result)` | `assertions::check(..)` / `assert_no_violation(..)` | P2 | |
-| `ArchRule.Factory.create(transformer, condition, priority)` / `withBecause(..)` | `ArchRule::create(..)` / `with_because(..)` | P2 | |
-| `ArchRule.Transformation` (`As`, `Because`) | `RuleTransformation` enum | P2 | |
-| `CompositeArchRule.of(rule).and(rule)` / `priority(..)` | `CompositeArchRule::of(rule).and(rule)` / `priority(..)` | P2 | |
-| `ArchCondition<T>` (abstract class: `init`, `check`, `finish`, `and`, `or`, `as`, `forSubtype`, `getDescription`) | `trait ArchCondition<T>` with `init(&self, all: &[&T])`, `check(&self, item: &T, events: &mut ConditionEvents)`, `finish(&self, events)`, `description()`; combinators `and`, `or`, `as_` provided where `Self: Sized`; `ArchCondition::new(desc, closure)` convenience | P2 | Stateful conditions use interior mutability |
-| `ArchCondition.ConditionByPredicate` (`describeEventsBy`) | `ConditionByPredicate<T>` with `describe_events_by(..)` | P2 | |
-| `ConditionEvents` / `ConditionEvent` / `SimpleConditionEvent` (`violated`, `satisfied`, `invert`, `getDescriptionLines`, `handleWith`) | `ConditionEvents` / `trait ConditionEvent` / `SimpleConditionEvent::{violated, satisfied}` … | P2 | |
-| `ConditionEvents.setInformationAboutNumberOfViolations(..)` | `set_information_about_number_of_violations(..)` | P2 | used by cycle detection |
-| `EvaluationResult` (`hasViolation`, `getFailureReport`, `getPriority`, `add`, `handleViolations`, `filterDescriptionsMatching`) | `EvaluationResult` with `has_violation()`, `failure_report()`, `priority()`, `add(..)`, `handle_violations(..)`, `filter_descriptions_matching(..)` | P2 | `handleViolations` takes a `ViolationHandler<T>` closure dispatched on `RustAccess`/`Dependency`/`RustItem` via an enum instead of reified generics |
-| `FailureReport` (`isEmpty`, `getDetails`, `toString`) | `FailureReport` | P2 | |
-| `FailureMessages` (`getInformationAboutNumberOfViolations`) | `FailureMessages` | P2 | |
-| `FailureDisplayFormat` (+ `failureDisplayFormat` property) | `trait FailureDisplayFormat`; set programmatically via `ArchConfiguration::set_failure_display_format(..)` | P2 partial | Cannot be instantiated from a class name in a config file |
-| `Priority` (`HIGH`, `MEDIUM`, `LOW`, `asString`) | `Priority::{High, Medium, Low}`, `as_string()` | P2 | |
-| `ClassesTransformer<T>` / `AbstractClassesTransformer` | `trait ClassesTransformer<T>` / `AbstractClassesTransformer::new(desc, fn)` | P2 | |
-| `ViolationHandler<T>` | `trait ViolationHandler<T>` (+ closures) | P2 | |
-| `CanBeEvaluated` | `trait CanBeEvaluated` | P2 | |
+| `ArchRule` (interface) | `trait ArchRule: HasDescription + Send + Sync` | done | Object safe; `Box<dyn ArchRule>` implements it |
+| `check(JavaClasses)` | `check(&RustItems)` | done | Panics with the failure report (Rust's `AssertionError`) |
+| `evaluate(JavaClasses)` | `evaluate(&RustItems) -> EvaluationResult` | done | |
+| `because(String)` | `because(&str) -> Self` | done | Description: `.. because 'reason'` (Java: `", because " + reason`) |
+| `as(String)` | `as_(&str) -> Self` | done | |
+| `allowEmptyShould(boolean)` | `allow_empty_should(bool) -> Self` | done | |
+| `getDescription()` | `description()` | done | |
+| `ArchRule.Assertions.check(rule, classes)` / `assertNoViolation(result)` | `assertions::check(..)` / `assert_no_violation(..)` | done | |
+| `ArchRule.Factory.create(transformer, condition, priority)` / `withBecause(..)` | `ArchRule::create(..)` / `with_because(..)` | done | |
+| `ArchRule.Transformation` (`As`, `Because`) | `RuleTransformation` enum | done | |
+| `CompositeArchRule.of(rule).and(rule)` / `priority(..)` | `CompositeArchRule::of(rule).and(rule)` / `priority(..)` | done | |
+| `ArchCondition<T>` (abstract class: `init`, `check`, `finish`, `and`, `or`, `as`, `forSubtype`, `getDescription`) | `struct ArchCondition<T>` with `ArchCondition::new(desc, \|item, events\| ..)` for the common case and `ArchCondition::from_logic(desc, impl ConditionLogic<T>)` for stateful conditions (`init(&mut self, all)`, `check(&mut self, ..)`, `finish(&mut self, ..)`); `and`, `or`, `as_`, `never`, `not`, `for_subtype` | done | Conditions are `Clone` and share their logic behind a mutex, so one instance evaluated concurrently serialises |
+| `ArchCondition.ConditionByPredicate` (`describeEventsBy`) | `ConditionByPredicate<T>` with `describe_events_by(..)` | done | |
+| `ConditionEvents` / `ConditionEvent` / `SimpleConditionEvent` (`violated`, `satisfied`, `invert`, `getDescriptionLines`, `handleWith`) | `ConditionEvents` / `trait ConditionEvent` / `SimpleConditionEvent::{violated, satisfied}` … | done | |
+| `ConditionEvents.setInformationAboutNumberOfViolations(..)` | `set_information_about_number_of_violations(..)` | done | used by cycle detection |
+| `EvaluationResult` (`hasViolation`, `getFailureReport`, `getPriority`, `add`, `handleViolations`, `filterDescriptionsMatching`) | `EvaluationResult` with `has_violation()`, `failure_report()`, `priority()`, `add(..)`, `handle_violations(..)`, `filter_descriptions_matching(..)` | done | `handleViolations` takes a `ViolationHandler<T>` closure dispatched on `RustAccess`/`Dependency`/`RustItem` via an enum instead of reified generics |
+| `FailureReport` (`isEmpty`, `getDetails`, `toString`) | `FailureReport` | done | |
+| `FailureMessages` (`getInformationAboutNumberOfViolations`) | `FailureMessages` | done | |
+| `FailureDisplayFormat` (+ `failureDisplayFormat` property) | `trait FailureDisplayFormat`; `DefaultFailureDisplayFormat`; set programmatically via `ArchConfiguration::set_failure_display_format(..)` | partial | Cannot be instantiated from a class name in a config file |
+| `Priority` (`HIGH`, `MEDIUM`, `LOW`, `asString`) | `Priority::{High, Medium, Low}`, `as_string()` | done | |
+| `ClassesTransformer<T>` / `AbstractClassesTransformer` | `struct ClassesTransformer<T>` created with `ClassesTransformer::new(desc, \|items\| ..)`; `that(pred)`, `as_(desc)` | done | One struct instead of interface + abstract class |
+| `ViolationHandler<T>` | `trait ViolationHandler<T>` (+ closures); `EvaluationResult::handle_violations::<T>(..)` selects objects through `FromCorrespondingObject` (implemented for `RustItem`, `RustMember`, `RustAccess`, `Dependency`, `String`) | done | Java reifies `T` from the handler's generic signature; Rust needs the type in the closure signature |
+| `CanBeEvaluated` | `trait CanBeEvaluated` | done | |
 | `ArchUnitExtension` / `ArchUnitExtensions` / `EvaluatedRule` (ServiceLoader plug-ins) | `trait ArchUnitExtension`; registered with `ArchConfiguration::register_extension(..)` | deferred | No ServiceLoader; programmatic registration only |
-| `archunit_ignore_patterns.txt` | `archunit_ignore_patterns.txt` in the crate root (or the path in `archunit.toml`) | P2 | Same semantics: one regex per line, `#` comments |
-| Failure message | identical: `Architecture Violation [Priority: MEDIUM] - Rule 'DESC' was violated (N times):\n<details>` | P2 | |
-| Empty-should failure | identical text, referencing `archunit.toml` key `arch_rule.fail_on_empty_should` | P2 | |
+| `archunit_ignore_patterns.txt` | `archunit_ignore_patterns.txt` in the crate root (or the path in `archunit.toml`) | done | Same semantics: one regex per line, `#` comments |
+| Failure message | identical: `Architecture Violation [Priority: MEDIUM] - Rule 'DESC' was violated (N times):\n<details>` | done | |
+| Empty-should failure | identical text, referencing `archunit.toml` key `arch_rule.fail_on_empty_should` | done | |
 
 ### 4.2 `ArchRuleDefinition` → `archunit::lang::syntax`
 
 | Java | Rust | Status |
 |---|---|---|
-| `classes()` / `noClasses()` | `classes()` / `no_classes()` | P2 |
-| `theClass(Class/String)` / `noClass(..)` | `the_class(&str)` / `no_class(&str)` | P2 |
-| `members()` / `noMembers()` | `members()` / `no_members()` | P2 |
-| `fields()` / `noFields()` | `fields()` / `no_fields()` | P2 |
-| `codeUnits()` / `noCodeUnits()` | `code_units()` / `no_code_units()` | P2 |
-| `constructors()` / `noConstructors()` | `constructors()` / `no_constructors()` | P2 partial (heuristic constructors) |
-| `methods()` / `noMethods()` | `methods()` / `no_methods()` | P2 |
-| `all(ClassesTransformer)` / `no(ClassesTransformer)` | `all(transformer)` / `no(transformer)` | P2 |
-| `priority(Priority).classes()` … | `priority(Priority::Low).classes()` … | P2 |
-| `[rust-only]` | `modules()` / `no_modules()`, `traits()` / `no_traits()`, `functions()` / `no_functions()` | P2 |
+| `classes()` / `noClasses()` | `classes()` / `no_classes()` | done |
+| `theClass(Class/String)` / `noClass(..)` | `the_class(&str)` / `no_class(&str)` | done |
+| `members()` / `noMembers()` | `members()` / `no_members()` | done |
+| `fields()` / `noFields()` | `fields()` / `no_fields()` | done |
+| `codeUnits()` / `noCodeUnits()` | `code_units()` / `no_code_units()` | done |
+| `constructors()` / `noConstructors()` | `constructors()` / `no_constructors()` | partial | Constructors are the heuristic subset of associated functions (see §2.2) |
+| `methods()` / `noMethods()` | `methods()` / `no_methods()` | done |
+| `all(ClassesTransformer)` / `no(ClassesTransformer)` | `all(transformer)` / `no(transformer)` | done |
+| `priority(Priority).classes()` … | `priority(Priority::Low).classes()` … | done |
+| `[rust-only]` | `modules()` / `no_modules()`, `traits()` / `no_traits()`, `functions()` / `no_functions()` | done |
 
 ### 4.3 `GivenClasses` / `GivenClassesConjunction` / `GivenObjects` / `GivenConjunction`
 
 | Java | Rust | Status |
 |---|---|---|
-| `that()` | `that()` → `ClassesThat<GivenClassesConjunction>` | P2 |
-| `that(DescribedPredicate)` | `that_with(pred)` | P2 |
-| `should()` | `should()` → `ClassesShould` | P2 |
-| `should(ArchCondition)` | `should_with(cond)` | P2 |
-| `and()` / `or()` | `and()` / `or()` | P2 |
-| `and(pred)` / `or(pred)` | `and_with(pred)` / `or_with(pred)` | P2 |
-| `GivenClass.should()` / `should(cond)` | `should()` / `should_with(cond)` | P2 |
-| `GivenObjects<T>.that(pred)` / `should(cond)` | `that(pred)` / `should(cond)` (no zero-arg clash, so no suffix) | P2 |
+| `that()` | `that()` → `ClassesThat<GivenClassesConjunction>` | done |
+| `that(DescribedPredicate)` | `that_with(pred)`; also `that().satisfy(pred)` | done |
+| `should()` | `should()` → `ClassesShould` | done |
+| `should(ArchCondition)` | `should_with(cond)`; also `should().satisfy(cond)` | done |
+| `and()` / `or()` | `and()` / `or()` | done |
+| `and(pred)` / `or(pred)` | `and_with(pred)` / `or_with(pred)` | done |
+| `GivenClass.should()` / `should(cond)` | `should()` / `should_with(cond)` | done |
+| `GivenObjects<T>.that(pred)` / `should(cond)` | `that(pred)` / `should(cond)` (no zero-arg clash, so no suffix) | done |
 
 ### 4.4 `ClassesThat<CONJUNCTION>` (predicates)
 
@@ -412,104 +412,104 @@ All return `CONJUNCTION`. Rust: `ClassesThat<C>` returns `C`.
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `haveFullyQualifiedName` / `doNotHaveFullyQualifiedName` | `have_fully_qualified_name` / `do_not_have_fully_qualified_name` | P2 | |
-| `haveSimpleName` / `doNotHaveSimpleName` | `have_simple_name` / `do_not_have_simple_name` | P2 | |
-| `haveNameMatching` / `haveNameNotMatching` | `have_name_matching` / `have_name_not_matching` | P2 | `regex` crate syntax |
-| `haveSimpleNameStartingWith/NotStartingWith/Containing/NotContaining/EndingWith/NotEndingWith` | same, snake_case | P2 | |
-| `resideInAPackage` / `resideInAnyPackage` / `resideOutsideOfPackage` / `resideOutsideOfPackages` | same, snake_case | P2 | |
-| `arePublic` / `areNotPublic` | `are_public` / `are_not_public` | P2 | `pub` |
-| `areProtected` / `areNotProtected` | `are_protected` / `are_not_protected` | P2 | restricted visibility |
-| `arePackagePrivate` / `areNotPackagePrivate` | `are_package_private` / `are_not_package_private` | P2 | private |
-| `arePrivate` / `areNotPrivate` | `are_private` / `are_not_private` | P2 | private (synonym) |
-| `haveModifier` / `doNotHaveModifier` | `have_modifier(RustModifier)` / `do_not_have_modifier` | P2 | |
-| `areAnnotatedWith(Class/String/pred)` / `areNotAnnotatedWith` | `are_annotated_with(impl Into<AnnotationSelector>)` / `are_not_annotated_with` | P2 | |
+| `haveFullyQualifiedName` / `doNotHaveFullyQualifiedName` | `have_fully_qualified_name` / `do_not_have_fully_qualified_name` | done | |
+| `haveSimpleName` / `doNotHaveSimpleName` | `have_simple_name` / `do_not_have_simple_name` | done | |
+| `haveNameMatching` / `haveNameNotMatching` | `have_name_matching` / `have_name_not_matching` | done | `regex` crate syntax |
+| `haveSimpleNameStartingWith/NotStartingWith/Containing/NotContaining/EndingWith/NotEndingWith` | same, snake_case | done | |
+| `resideInAPackage` / `resideInAnyPackage` / `resideOutsideOfPackage` / `resideOutsideOfPackages` | same, snake_case | done | |
+| `arePublic` / `areNotPublic` | `are_public` / `are_not_public` | done | `pub` |
+| `areProtected` / `areNotProtected` | `are_protected` / `are_not_protected` | done | restricted visibility |
+| `arePackagePrivate` / `areNotPackagePrivate` | `are_package_private` / `are_not_package_private` | done | private |
+| `arePrivate` / `areNotPrivate` | `are_private` / `are_not_private` | done | private (synonym) |
+| `haveModifier` / `doNotHaveModifier` | `have_modifier(RustModifier)` / `do_not_have_modifier` | done | |
+| `areAnnotatedWith(Class/String/pred)` / `areNotAnnotatedWith` | `are_annotated_with(impl Into<AnnotationSelector>)` / `are_not_annotated_with` | done | |
 | `areMetaAnnotatedWith` / `areNotMetaAnnotatedWith` (3 overloads) | — | unsupported | no meta-annotations |
-| `implement(Class/String/pred)` / `doNotImplement` | `implement(impl Into<ItemSelector>)` / `do_not_implement` | P2 | |
-| `areAssignableTo` / `areNotAssignableTo` / `areAssignableFrom` / `areNotAssignableFrom` | same, snake_case | P2 | |
-| `areInterfaces` / `areNotInterfaces` | `are_interfaces` / `are_not_interfaces` | P2 | traits; `are_traits` is an alias `[rust-only]` |
-| `areEnums` / `areNotEnums` | `are_enums` / `are_not_enums` | P2 | |
-| `areAnnotations` / `areNotAnnotations` | `are_annotations` / `are_not_annotations` | P2 | proc-macro attribute/derive definitions |
+| `implement(Class/String/pred)` / `doNotImplement` | `implement(impl Into<ItemSelector>)` / `do_not_implement` | done | |
+| `areAssignableTo` / `areNotAssignableTo` / `areAssignableFrom` / `areNotAssignableFrom` | same, snake_case | done | |
+| `areInterfaces` / `areNotInterfaces` | `are_interfaces` / `are_not_interfaces` | done | traits; `are_traits` is an alias `[rust-only]` |
+| `areEnums` / `areNotEnums` | `are_enums` / `are_not_enums` | done | |
+| `areAnnotations` / `areNotAnnotations` | `are_annotations` / `are_not_annotations` | done | proc-macro attribute/derive definitions |
 | `areRecords` / `areNotRecords` | — | unsupported | no records; use `are_structs` |
-| `areTopLevelClasses` / `areNotTopLevelClasses` | `are_top_level_classes` / `are_not_top_level_classes` | P2 | |
-| `areNestedClasses` / `areNotNestedClasses` / `areLocalClasses` / `areNotLocalClasses` | same, snake_case | P2 | both = declared inside a body |
+| `areTopLevelClasses` / `areNotTopLevelClasses` | `are_top_level_classes` / `are_not_top_level_classes` | done | |
+| `areNestedClasses` / `areNotNestedClasses` / `areLocalClasses` / `areNotLocalClasses` | same, snake_case | done | both = declared inside a body |
 | `areMemberClasses` / `areInnerClasses` / `areAnonymousClasses` (+ negations) | — | unsupported | |
-| `belongToAnyOf(Class...)` / `doNotBelongToAnyOf` | `belong_to_any_of(&[&str])` / `do_not_belong_to_any_of` | P2 | "belong to" = is the item or is declared inside it |
-| `containAnyMembersThat` / `containAnyFieldsThat` / `containAnyCodeUnitsThat` / `containAnyMethodsThat` / `containAnyConstructorsThat` | same, snake_case | P2 | |
+| `belongToAnyOf(Class...)` / `doNotBelongToAnyOf` | `belong_to_any_of(&[&str])` / `do_not_belong_to_any_of` | done | "belong to" = is the item or is declared inside it |
+| `containAnyMembersThat` / `containAnyFieldsThat` / `containAnyCodeUnitsThat` / `containAnyMethodsThat` / `containAnyConstructorsThat` | same, snake_case | done | |
 | `containAnyStaticInitializersThat` | — | unsupported | |
-| `[rust-only]` | `are_structs`, `are_unions`, `are_functions`, `are_modules`, `are_type_aliases`, `are_consts`, `are_statics`, `are_macros`, `are_unsafe`, `are_async`, `are_const_fns`, `are_pub_crate`, `are_test_code`, `reside_in_crate(&str)` | P2 | |
+| `[rust-only]` | `are_structs`, `are_unions`, `are_functions`, `are_modules`, `are_type_aliases`, `are_consts`, `are_statics`, `are_macros`, `are_unsafe`, `are_async`, `are_const_fns`, `are_pub_crate`, `are_test_code`, `reside_in_crate(&str)` | done | |
 
 ### 4.5 `ClassesShould` (conditions) and `ClassesShouldConjunction`
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| name conditions (`haveFullyQualifiedName`, `notHaveFullyQualifiedName`, `haveSimpleName`, `notHaveSimpleName`, `haveSimpleName{Not}StartingWith/Containing/EndingWith`, `haveName{Not}Matching`) | same, snake_case | P2 | |
-| `resideInAPackage` / `resideInAnyPackage` / `resideOutsideOfPackage` / `resideOutsideOfPackages` | same | P2 | |
-| `bePublic` / `notBePublic` / `beProtected` / `notBeProtected` / `bePackagePrivate` / `notBePackagePrivate` / `bePrivate` / `notBePrivate` | same | P2 | see §2.3 |
+| name conditions (`haveFullyQualifiedName`, `notHaveFullyQualifiedName`, `haveSimpleName`, `notHaveSimpleName`, `haveSimpleName{Not}StartingWith/Containing/EndingWith`, `haveName{Not}Matching`) | same, snake_case | done | |
+| `resideInAPackage` / `resideInAnyPackage` / `resideOutsideOfPackage` / `resideOutsideOfPackages` | same | done | |
+| `bePublic` / `notBePublic` / `beProtected` / `notBeProtected` / `bePackagePrivate` / `notBePackagePrivate` / `bePrivate` / `notBePrivate` | same | done | see §2.3 |
 | `haveOnlyFinalFields()` | — | unsupported | Rust fields have no `final`; `[rust-only]` `have_only_private_fields()` is the useful analog (immutability from outside the module) |
-| `haveOnlyPrivateConstructors()` | `have_only_private_constructors()` | P2 partial | True when the type cannot be constructed outside its module: it has a private field or is `#[non_exhaustive]`, and every constructor-classified fn is private |
-| `haveModifier` / `notHaveModifier` | same | P2 | |
-| `beAnnotatedWith` / `notBeAnnotatedWith` (3 overloads) | `be_annotated_with(impl Into<AnnotationSelector>)` / `not_be_annotated_with` | P2 | |
+| `haveOnlyPrivateConstructors()` | `have_only_private_constructors()` | partial | True when the type cannot be constructed outside its module: it has a private field or is `#[non_exhaustive]`, and every constructor-classified fn is private |
+| `haveModifier` / `notHaveModifier` | same | done | |
+| `beAnnotatedWith` / `notBeAnnotatedWith` (3 overloads) | `be_annotated_with(impl Into<AnnotationSelector>)` / `not_be_annotated_with` | done | |
 | `beMetaAnnotatedWith` / `notBeMetaAnnotatedWith` | — | unsupported | |
-| `implement` / `notImplement` (3 overloads) | `implement(..)` / `not_implement(..)` | P2 | |
-| `beAssignableTo` / `notBeAssignableTo` / `beAssignableFrom` / `notBeAssignableFrom` | same | P2 | |
-| `accessField(owner, name)` / `accessFieldWhere(pred)` / `onlyAccessFieldsThat(pred)` | `access_field(&str, &str)` / `access_field_where(pred)` / `only_access_fields_that(pred)` | P2 | |
-| `getField` / `getFieldWhere` / `setField` / `setFieldWhere` | same | P2 | |
-| `callMethod(owner, name, params...)` / `callMethodWhere` / `onlyCallMethodsThat` | `call_method(&str, &str, &[&str])` / `call_method_where` / `only_call_methods_that` | P2 | |
-| `callConstructor(owner, params...)` / `callConstructorWhere` / `onlyCallConstructorsThat` | `call_constructor(&str, &[&str])` / … | P2 partial | |
-| `callCodeUnitWhere` / `onlyCallCodeUnitsThat` | same | P2 | |
-| `accessTargetWhere` / `onlyAccessMembersThat` | same | P2 | |
-| `accessClassesThat()` / `accessClassesThat(pred)` | `access_classes_that()` / `access_classes_that_with(pred)` | P2 | |
-| `onlyAccessClassesThat()` / `(pred)` | `only_access_classes_that()` / `_with` | P2 | |
-| `dependOnClassesThat()` / `(pred)` | `depend_on_classes_that()` / `_with` | P2 | |
-| `onlyDependOnClassesThat()` / `(pred)` | `only_depend_on_classes_that()` / `_with` | P2 | |
-| `transitivelyDependOnClassesThat()` / `(pred)` | `transitively_depend_on_classes_that()` / `_with` | P2 | |
-| `onlyBeAccessed()` → `OnlyBeAccessedSpecification` | `only_be_accessed()` | P2 | |
-| `OnlyBeAccessedSpecification.byAnyPackage(..)` / `byClassesThat()` / `byClassesThat(pred)` | `by_any_package(&[&str])` / `by_classes_that()` / `by_classes_that_with(pred)` | P2 | |
-| `onlyHaveDependentClassesThat()` / `(pred)` | `only_have_dependent_classes_that()` / `_with` | P2 | |
-| `beInterfaces` / `notBeInterfaces` / `beEnums` / `notBeEnums` | same | P2 | |
+| `implement` / `notImplement` (3 overloads) | `implement(..)` / `not_implement(..)` | done | |
+| `beAssignableTo` / `notBeAssignableTo` / `beAssignableFrom` / `notBeAssignableFrom` | same | done | |
+| `accessField(owner, name)` / `accessFieldWhere(pred)` / `onlyAccessFieldsThat(pred)` | `access_field(&str, &str)` / `access_field_where(pred)` / `only_access_fields_that(pred)` | done | |
+| `getField` / `getFieldWhere` / `setField` / `setFieldWhere` | same | done | |
+| `callMethod(owner, name, params...)` / `callMethodWhere` / `onlyCallMethodsThat` | `call_method(&str, &str, &[&str])` / `call_method_where` / `only_call_methods_that` | done | |
+| `callConstructor(owner, params...)` / `callConstructorWhere` / `onlyCallConstructorsThat` | `call_constructor(&str, &[&str])` / … | partial | Described as `call constructor Owner(p1, p2)`; parameter types are only compared when the target resolves to an imported member (also for `call_method`) |
+| `callCodeUnitWhere` / `onlyCallCodeUnitsThat` | same | done | |
+| `accessTargetWhere` / `onlyAccessMembersThat` | same | done | |
+| `accessClassesThat()` / `accessClassesThat(pred)` | `access_classes_that()` / `access_classes_that_with(pred)` | done | |
+| `onlyAccessClassesThat()` / `(pred)` | `only_access_classes_that()` / `_with` | done | |
+| `dependOnClassesThat()` / `(pred)` | `depend_on_classes_that()` / `_with` | done | |
+| `onlyDependOnClassesThat()` / `(pred)` | `only_depend_on_classes_that()` / `_with` | done | |
+| `transitivelyDependOnClassesThat()` / `(pred)` | `transitively_depend_on_classes_that()` / `_with` | done | |
+| `onlyBeAccessed()` → `OnlyBeAccessedSpecification` | `only_be_accessed()` | done | |
+| `OnlyBeAccessedSpecification.byAnyPackage(..)` / `byClassesThat()` / `byClassesThat(pred)` | `by_any_package(&[&str])` / `by_classes_that()` / `by_classes_that_with(pred)` | done | |
+| `onlyHaveDependentClassesThat()` / `(pred)` | `only_have_dependent_classes_that()` / `_with` | done | |
+| `beInterfaces` / `notBeInterfaces` / `beEnums` / `notBeEnums` | same | done | |
 | `beRecords` / `notBeRecords` | — | unsupported | |
-| `beTopLevelClasses` / `notBe..` / `beNestedClasses` / `notBe..` / `beLocalClasses` / `notBe..` | same | P2 | |
+| `beTopLevelClasses` / `notBe..` / `beNestedClasses` / `notBe..` / `beLocalClasses` / `notBe..` | same | done | |
 | `beMemberClasses` / `beInnerClasses` / `beAnonymousClasses` (+ negations) | — | unsupported | |
-| `be(Class/String)` / `notBe(..)` | `be(&str)` / `not_be(&str)` | P2 | |
-| `containNumberOfElements(pred)` | `contain_number_of_elements(pred)` | P2 | |
-| `andShould()` / `andShould(cond)` / `orShould()` / `orShould(cond)` | `and_should()` / `and_should_with(cond)` / `or_should()` / `or_should_with(cond)` | P2 | |
-| `[rust-only]` | `be_structs`, `be_traits`, `be_functions`, `be_modules`, `be_unsafe`, `not_be_unsafe`, `be_async`, `be_pub_crate`, `have_only_private_fields`, `reside_in_crate` | P2 | |
+| `be(Class/String)` / `notBe(..)` | `be(&str)` / `not_be(&str)` | done | |
+| `containNumberOfElements(pred)` | `contain_number_of_elements(pred)` | done | |
+| `andShould()` / `andShould(cond)` / `orShould()` / `orShould(cond)` | `and_should()` / `and_should_with(cond)` / `or_should()` / `or_should_with(cond)` | done | |
+| `[rust-only]` | `be_structs`, `be_traits`, `be_functions`, `be_modules`, `be_unsafe`, `not_be_unsafe`, `be_async`, `be_pub_crate`, `have_only_private_fields`, `reside_in_crate` | done | |
 
 ### 4.6 Members: `GivenMembers`, `MembersThat`, `MembersShould`, `FieldsThat/Should`, `CodeUnitsThat/Should`, `MethodsThat/Should`, `OnlyBeCalledSpecification`
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `GivenMembers.that()` / `that(pred)` / `should()` / `should(cond)`; conjunction `and()`/`or()`/`and(pred)`/`or(pred)` | same convention as classes (`_with` for object overloads) | P2 | |
-| `MembersThat.haveName` / `doNotHaveName` / `haveNameMatching` / `haveNameNotMatching` / `haveFullName` / `doNotHaveFullName` / `haveFullName{Not}Matching` / `haveName{Not}StartingWith/Containing/EndingWith` | same, snake_case | P2 | |
-| `MembersThat.arePublic/areNotPublic/areProtected/…/arePrivate/areNotPrivate` | same | P2 | |
-| `haveModifier` / `doNotHaveModifier` | same | P2 | |
-| `areAnnotatedWith` / `areNotAnnotatedWith` (3 overloads) | `are_annotated_with(..)` / `are_not_annotated_with(..)` | P2 | |
+| `GivenMembers.that()` / `that(pred)` / `should()` / `should(cond)`; conjunction `and()`/`or()`/`and(pred)`/`or(pred)` | same convention as classes (`_with` for object overloads) | done | |
+| `MembersThat.haveName` / `doNotHaveName` / `haveNameMatching` / `haveNameNotMatching` / `haveFullName` / `doNotHaveFullName` / `haveFullName{Not}Matching` / `haveName{Not}StartingWith/Containing/EndingWith` | same, snake_case | done | |
+| `MembersThat.arePublic/areNotPublic/areProtected/…/arePrivate/areNotPrivate` | same | done | |
+| `haveModifier` / `doNotHaveModifier` | same | done | |
+| `areAnnotatedWith` / `areNotAnnotatedWith` (3 overloads) | `are_annotated_with(..)` / `are_not_annotated_with(..)` | done | |
 | `areMetaAnnotatedWith` / `areNotMetaAnnotatedWith` | — | unsupported | |
-| `areDeclaredIn(Class/String)` / `areNotDeclaredIn` | `are_declared_in(&str)` / `are_not_declared_in(&str)` | P2 | |
-| `areDeclaredInClassesThat(pred)` / `areDeclaredInClassesThat()` | `are_declared_in_classes_that_with(pred)` / `are_declared_in_classes_that()` | P2 | |
-| `MembersShould.haveName/notHaveName/…` (mirror of `MembersThat`) | same | P2 | |
-| `MembersShould.bePublic/…/bePrivate` and negations | same | P2 | |
-| `MembersShould.beAnnotatedWith/notBeAnnotatedWith` | same | P2 | |
+| `areDeclaredIn(Class/String)` / `areNotDeclaredIn` | `are_declared_in(&str)` / `are_not_declared_in(&str)` | done | |
+| `areDeclaredInClassesThat(pred)` / `areDeclaredInClassesThat()` | `are_declared_in_classes_that_with(pred)` / `are_declared_in_classes_that()` | done | |
+| `MembersShould.haveName/notHaveName/…` (mirror of `MembersThat`) | same | done | |
+| `MembersShould.bePublic/…/bePrivate` and negations | same | done | |
+| `MembersShould.beAnnotatedWith/notBeAnnotatedWith` | same | done | |
 | `beMetaAnnotatedWith/notBeMetaAnnotatedWith` | — | unsupported | |
-| `beDeclaredIn` / `notBeDeclaredIn` / `beDeclaredInClassesThat()` / `(pred)` | `be_declared_in` / `not_be_declared_in` / `be_declared_in_classes_that()` / `_with` | P2 | |
-| `containNumberOfElements` | same | P2 | |
-| `MembersShouldConjunction.andShould()/(cond)/orShould()/(cond)` | `and_should()` / `and_should_with` / `or_should()` / `or_should_with` | P2 | |
-| `FieldsThat.haveRawType(Class/String/pred)` / `doNotHaveRawType` | `have_raw_type(impl Into<ItemSelector>)` / `do_not_have_raw_type` | P2 | |
-| `FieldsThat.areStatic/areNotStatic` | `are_static` / `are_not_static` | P2 | associated consts and `static`/`const` items |
+| `beDeclaredIn` / `notBeDeclaredIn` / `beDeclaredInClassesThat()` / `(pred)` | `be_declared_in` / `not_be_declared_in` / `be_declared_in_classes_that()` / `_with` | done | |
+| `containNumberOfElements` | same | done | |
+| `MembersShouldConjunction.andShould()/(cond)/orShould()/(cond)` | `and_should()` / `and_should_with` / `or_should()` / `or_should_with` | done | |
+| `FieldsThat.haveRawType(Class/String/pred)` / `doNotHaveRawType` | `have_raw_type(impl Into<ItemSelector>)` / `do_not_have_raw_type` | done | |
+| `FieldsThat.areStatic/areNotStatic` | `are_static` / `are_not_static` | done | associated consts and `static`/`const` items |
 | `FieldsThat.areFinal/areNotFinal` | — | unsupported | Rust fields have no `final` |
-| `FieldsShould.haveRawType/notHaveRawType` | same | P2 | |
-| `FieldsShould.beAccessedByMethodsThat(pred)` / `notBeAccessedByMethodsThat` | same | P2 | |
-| `FieldsShould.beStatic/notBeStatic` | same | P2 | |
+| `FieldsShould.haveRawType/notHaveRawType` | same | done | |
+| `FieldsShould.beAccessedByMethodsThat(pred)` / `notBeAccessedByMethodsThat` | same | done | |
+| `FieldsShould.beStatic/notBeStatic` | same | done | |
 | `FieldsShould.beFinal/notBeFinal` | — | unsupported | |
-| `CodeUnitsThat.haveRawParameterTypes(Class.../String.../pred)` / `doNotHaveRawParameterTypes` | `have_raw_parameter_types(&[&str])` / `have_raw_parameter_types_with(pred)` / negations | P2 | |
-| `CodeUnitsThat.haveRawReturnType(..)` / `doNotHaveRawReturnType` | `have_raw_return_type(impl Into<ItemSelector>)` / negation | P2 | |
-| `CodeUnitsThat.declareThrowableOfType(..)` / `doNotDeclareThrowableOfType` | `declare_throwable_of_type(..)` / negation | P2 partial | `Result<_, E>` |
-| `CodeUnitsShould.haveRawParameterTypes` / `haveRawReturnType` / `declareThrowableOfType` (+ `not` forms) | same | P2 | |
-| `CodeUnitsShould.onlyBeCalled()` → `OnlyBeCalledSpecification.byClassesThat(pred)/byClassesThat()/byCodeUnitsThat/byMethodsThat/byConstructorsThat` | `only_be_called()` → `by_classes_that_with(pred)` / `by_classes_that()` / `by_code_units_that(pred)` / `by_methods_that(pred)` / `by_constructors_that(pred)` | P2 | |
-| `MethodsThat.areStatic/areNotStatic` | same | P2 | no `self` receiver |
-| `MethodsThat.areFinal/areNotFinal` | same | P2 partial | inherent (non-overridable) methods |
-| `MethodsShould.beStatic/notBeStatic/beFinal/notBeFinal` | same | P2 partial | |
-| `[rust-only]` (methods/code units) | `are_unsafe`, `are_async`, `are_const`, `have_self_receiver`, `take_self_by_value`, `take_self_by_ref`, `take_self_by_mut_ref`, `are_trait_methods`, `are_default_methods`, `be_unsafe`, `not_be_unsafe`, … | P2 | |
+| `CodeUnitsThat.haveRawParameterTypes(Class.../String.../pred)` / `doNotHaveRawParameterTypes` | `have_raw_parameter_types(&[&str])` / `have_raw_parameter_types_with(pred)` / negations | done | |
+| `CodeUnitsThat.haveRawReturnType(..)` / `doNotHaveRawReturnType` | `have_raw_return_type(impl Into<ItemSelector>)` / negation | done | |
+| `CodeUnitsThat.declareThrowableOfType(..)` / `doNotDeclareThrowableOfType` | `declare_throwable_of_type(..)` / negation | partial | `Result<_, E>` |
+| `CodeUnitsShould.haveRawParameterTypes` / `haveRawReturnType` / `declareThrowableOfType` (+ `not` forms) | same | done | |
+| `CodeUnitsShould.onlyBeCalled()` → `OnlyBeCalledSpecification.byClassesThat(pred)/byClassesThat()/byCodeUnitsThat/byMethodsThat/byConstructorsThat` | `only_be_called()` → `by_classes_that_with(pred)` / `by_classes_that()` / `by_code_units_that(pred)` / `by_methods_that(pred)` / `by_constructors_that(pred)` | done | |
+| `MethodsThat.areStatic/areNotStatic` | same | done | no `self` receiver |
+| `MethodsThat.areFinal/areNotFinal` | same | partial | inherent (non-overridable) methods |
+| `MethodsShould.beStatic/notBeStatic/beFinal/notBeFinal` | same | partial | |
+| `[rust-only]` (methods/code units) | `are_unsafe`, `are_async`, `are_const`, `have_self_receiver`, `take_self_by_value`, `take_self_by_ref`, `take_self_by_mut_ref`, `are_trait_methods`, `are_default_methods`, `be_unsafe`, `not_be_unsafe`, … | done | |
 
 ### 4.7 `ArchConditions` → `archunit::lang::conditions`
 
@@ -518,24 +518,25 @@ only entries that deviate.
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| all `getField/setField/accessField[Where]`, `callMethod[Where]`, `callConstructor[Where]`, `callCodeUnitWhere`, `only*`, `accessClassesThat`, `onlyAccessClassesThat`, `dependOnClassesThat`, `haveAnyDependenciesThat`, `transitivelyDependOnClassesThat`, `onlyDependOnClassesThat`, `onlyBeAccessedByClassesThat`, `accessClassesThatResideIn[AnyPackage]`, `onlyBeAccessedByAnyPackage`, `onlyHaveDependentsInAnyPackage`, `onlyHaveDependentClassesThat`, `onlyHaveDependentsWhere`, `onlyHaveDependenciesInAnyPackage`, `onlyHaveDependenciesWhere` | same, snake_case | P2 | |
-| `and(a, b)` / `or(a, b)` / `never(c)` / `not(c)` | same | P2 | |
-| `be(Class/String)` / `notBe` / name conditions / package conditions / visibility conditions / `haveModifier` / `beAnnotatedWith` / `implement` / `beAssignableTo/From` / `beInterfaces` / `beEnums` / `beTopLevelClasses` / `beNestedClasses` / `beLocalClasses` | same | P2 | |
+| all `getField/setField/accessField[Where]`, `callMethod[Where]`, `callConstructor[Where]`, `callCodeUnitWhere`, `only*`, `accessClassesThat`, `onlyAccessClassesThat`, `dependOnClassesThat`, `haveAnyDependenciesThat`, `transitivelyDependOnClassesThat`, `onlyDependOnClassesThat`, `onlyBeAccessedByClassesThat`, `accessClassesThatResideIn[AnyPackage]`, `onlyBeAccessedByAnyPackage`, `onlyHaveDependentsInAnyPackage`, `onlyHaveDependentClassesThat`, `onlyHaveDependentsWhere`, `onlyHaveDependenciesInAnyPackage`, `onlyHaveDependenciesWhere` | same, snake_case | done | |
+| `and(a, b)` / `or(a, b)` / `never(c)` / `not(c)` | same | done | |
+| `be(Class/String)` / `notBe(String)` | `be_class(&str)` / `not_be_class(&str)` | done | Renamed because `be(predicate)` takes the generic overload; the DSL keeps `should().be(name)` |
+| name conditions / package conditions / visibility conditions / `haveModifier` / `beAnnotatedWith` / `implement` / `beAssignableTo/From` / `beInterfaces` / `beEnums` / `beTopLevelClasses` / `beNestedClasses` / `beLocalClasses` | same | done | Event texts follow ArchUnit (`is an interface` / `is no interface`, `has simple name ..` / `does not have simple name ..`) |
 | `beMetaAnnotatedWith`, `beRecords`, `beMemberClasses`, `beInnerClasses`, `beAnonymousClasses`, `haveOnlyFinalFields` | — | unsupported | see §4.5 |
-| `haveOnlyPrivateConstructors` | same | P2 partial | |
-| `containNumberOfElements(pred)` | same | P2 | |
-| `beDeclaredIn` / `notBeDeclaredIn` / `beDeclaredInClassesThat` | same | P2 | |
-| `haveRawType` / `haveRawParameterTypes` / `haveRawReturnType` / `declareThrowableOfType` | same | P2 | |
-| `onlyBeCalledByClassesThat` / `..ByCodeUnitsThat` / `..ByMethodsThat` / `..ByConstructorsThat` / `beAccessedByMethodsThat` | same | P2 | |
-| `have(pred)` / `be(pred)` (`ConditionByPredicate`) | `have(pred)` / `be(pred)` | P2 | |
-| `AllDependenciesCondition.ignoreDependency(..)` (returned by `onlyHaveDependencies*`) | `AllDependenciesCondition::ignore_dependency(..)` | P2 | |
-| `[rust-only]` | `use_unsafe_blocks`, `call_function(&str)`, `invoke_macro(&str)`, `access_standard_streams`, `panic`, `call_unwrap`, `call_process_exit`, `return_generic_errors` | P2/P5 | see §5.5 |
+| `haveOnlyPrivateConstructors` | same | partial | |
+| `containNumberOfElements(pred)` | same | done | |
+| `beDeclaredIn` / `notBeDeclaredIn` / `beDeclaredInClassesThat` | same | done | |
+| `haveRawType` / `haveRawParameterTypes` / `haveRawReturnType` / `declareThrowableOfType` | same | done | |
+| `onlyBeCalledByClassesThat` / `..ByCodeUnitsThat` / `..ByMethodsThat` / `..ByConstructorsThat` / `beAccessedByMethodsThat` | same | done | |
+| `have(pred)` / `be(pred)` (`ConditionByPredicate`) | `have(pred)` / `be(pred)` | done | |
+| `AllDependenciesCondition.ignoreDependency(..)` (returned by `onlyHaveDependencies*`) | `AllDependenciesCondition::ignore_dependency(..)` | done | |
+| `[rust-only]` | `use_unsafe_blocks`, `call_function(&str)`, `invoke_macro(&str)`, `access_standard_streams`, `panic`, `call_unwrap`, `call_process_exit`, `return_generic_errors` | partial | see §5.5 |
 
 ### 4.8 `ArchPredicates`
 
 | Java | Rust | Status |
 |---|---|---|
-| `is(pred)` / `are(pred)` / `has(pred)` / `have(pred)` / `be(pred)` | same | P2 |
+| `is(pred)` / `are(pred)` / `has(pred)` / `have(pred)` / `be(pred)` | `archunit::lang::conditions::predicates::{is, are, has, have, be}` | done |
 
 ### 4.9 Rule text generation
 
@@ -682,8 +683,8 @@ named `harness`; every annotation keeps its ArchUnit name.
 | `classResolver` / `classResolver.args` (`SelectedClassResolverFromClasspath`) | `class_resolver.packages = ["tokio..", "serde.."]` | P4 | Only the "selected packages" resolver; no custom resolver by class name |
 | `import.dependencyResolutionProcess.maxIterationsFor{MemberTypes,AccessesToTypes,Supertypes,PermittedSubclasses,EnclosingTypes,AnnotationTypes,GenericSignatureTypes}` | `[import.dependency_resolution_process] max_iterations_for_member_types`, … | P4 | Same defaults; `permitted_subclasses` accepted and ignored |
 | `enableMd5InClassSources` | — | unsupported | No class files |
-| `archRule.failOnEmptyShould` | `[arch_rule] fail_on_empty_should` (default `true`) | P2 | |
-| `failureDisplayFormat` | — (programmatic only) | P2 partial | |
+| `archRule.failOnEmptyShould` | `[arch_rule] fail_on_empty_should` (default `true`); `ArchConfiguration::set_fail_on_empty_should(..)` | partial | Programmatic API done; the TOML key follows in P4 |
+| `failureDisplayFormat` | — (programmatic only) | partial | |
 | `extension.<id>.enabled` / `extension.<id>.<prop>` | `[extension.<id>] enabled`, … | deferred | |
 | `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | P3 | |
 | `freeze.*` | `[freeze] …` (see §5.6) | P5 | |
@@ -735,13 +736,35 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 * **Binary targets** sharing the package name keep the lib's root name; colliding paths keep the
   library item in the index (documented, rare).
 
+### Phase 2
+
+* **Overload naming** as decided in Phase 0: fluent `that()` / `should()` / `and_should()` /
+  `access_classes_that()` keep the name; the object-taking overloads are `that_with(pred)`,
+  `should_with(cond)`, `and_should_with(cond)`, `access_classes_that_with(pred)`, and so on.
+  `ClassesThat::satisfy(pred)` / `ClassesShould::satisfy(cond)` are Rust-only escape hatches.
+* **Rule objects.** Every fluent chain ends in a concrete type (`ClassesShouldConjunction`,
+  `MembersShouldConjunction<M>`, `SimpleArchRule<T>`, `CompositeArchRule`) that implements
+  `ArchRule`; `because`, `as_` and `allow_empty_should` return `SimpleArchRule<T>` (no further
+  chaining, like Java's `ArchRule`). `Box<dyn ArchRule>` has the same three methods.
+* **`ArchCondition<T>` is a struct**, not a trait; custom logic goes through a closure or a
+  `ConditionLogic<T>` implementation. Java's `ArchConditions`/`ArchPredicates` static classes
+  are modules of free functions (`archunit::lang::conditions`, `..::conditions::predicates`).
+* **Trait-impl members are `pub`**: `impl Trait for Type { fn f() }` items are as visible as the
+  trait, so `be_public()` accepts them.
+* **Modules reside in themselves.** A module item's `package_name()` is its own path, so a `use`
+  in `mod service` counts as a dependency from package `..service..`.
+* **`ArchConfiguration::with_thread_local_scope(..)`** gives tests a private configuration
+  (fail-on-empty-should, ignore patterns, display format) without touching other threads.
+* **Empty `should`** panics from `evaluate` with ArchUnit's message, naming
+  `ArchRule::allow_empty_should(true)` and `arch_rule.fail_on_empty_should = false`.
+
 ## 10. Phase status log
 
 | Phase | Status | Summary |
 |---|---|---|
 | 0 | done | Research, this mapping, PLAN.md, CLAUDE.md, NOTICE |
 | 1 | done | Importer (`cargo_metadata` + `syn`), name resolution across modules/crates incl. re-exports and globs, domain model with members, accesses, dependencies; fixtures `layered_app`, `onion_app`, `cyclic_app`, `reexports_app`; 35 tests |
-| 2 | pending | |
+| 2 | done | `ArchRule`, `ArchCondition`/`ConditionLogic`, events, `EvaluationResult`/`FailureReport` in ArchUnit's format, ignore patterns, `ArchConfiguration` (programmatic), all `ArchConditions`, the full `classes()`/`no_classes()`/`the_class()`/members/`all()` syntax; 25 lang tests incl. golden reports |
 | 3 | pending | |
 | 4 | pending | |
 | 5 | pending | |

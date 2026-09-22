@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'the class layered_app::core::VeryCentralCore should only be accessed by classes that implement CoreSatellite, because satellites are the only supported clients' was violated (2 times):
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_core()> calls constructor <layered_app::core::VeryCentralCore> in (src/service/mod.rs:63)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_core()> calls method <layered_app::core::VeryCentralCore::do_core_stuff()> in (src/service/mod.rs:63)

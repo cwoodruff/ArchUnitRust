@@ -58,6 +58,12 @@ impl HasName for RustModule {
     }
 }
 
+impl super::properties::HasSourceCodeLocation for RustModule {
+    fn source_code_location(&self) -> super::source_code_location::SourceCodeLocation {
+        self.graph.items[self.id].location.clone()
+    }
+}
+
 impl CanBeAnnotated for RustModule {
     fn annotations(&self) -> Vec<RustAnnotation> {
         self.graph.items[self.id].annotations.clone()

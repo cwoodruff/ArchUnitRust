@@ -2,7 +2,6 @@
 
 mod common;
 
-use archunit::core::domain::properties::CanBeAnnotated;
 use archunit::core::domain::{AccessKind, ItemKind, ResolutionKind, TargetKind};
 use archunit::core::importer::import_option::{DoNotIncludeTests, OnlyIncludeTests};
 use archunit::core::importer::{CrateImporter, Location};

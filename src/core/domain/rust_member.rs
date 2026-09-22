@@ -263,6 +263,24 @@ impl RustMember {
         CanBeAnnotated::annotations(self)
     }
 
+    /// `JavaMember.isAnnotatedWith(..)`.
+    pub fn is_annotated_with(
+        &self,
+        selector: impl Into<super::properties::AnnotationSelector>,
+    ) -> bool {
+        CanBeAnnotated::is_annotated_with(self, selector)
+    }
+
+    /// `JavaMember.getAnnotationOfType(..)`; panics if absent.
+    pub fn annotation_of_type(&self, name: &str) -> RustAnnotation {
+        CanBeAnnotated::annotation_of_type(self, name)
+    }
+
+    /// `JavaMember.tryGetAnnotationOfType(..)`.
+    pub fn try_annotation_of_type(&self, name: &str) -> Option<RustAnnotation> {
+        CanBeAnnotated::try_annotation_of_type(self, name)
+    }
+
     /// `JavaMember.getSourceCodeLocation()`.
     pub fn source_code_location(&self) -> SourceCodeLocation {
         HasSourceCodeLocation::source_code_location(self)
@@ -608,6 +626,109 @@ member_view!(
     /// An enum variant (`JavaEnumConstant`).
     RustVariant
 );
+
+/// Member kinds the rule syntax can be about: `members()`, `fields()`, `code_units()`,
+/// `methods()`, `constructors()`.
+pub trait MemberLike:
+    Clone
+    + fmt::Debug
+    + HasDescription
+    + HasName
+    + HasFullName
+    + HasModifiers
+    + CanBeAnnotated
+    + HasOwner<RustItem>
+    + HasSourceCodeLocation
+    + HasType
+    + HasReturnType
+    + HasParameterTypes
+    + HasErrorTypes
+    + crate::lang::AsCorrespondingObject
+    + Send
+    + Sync
+    + 'static
+{
+    /// The plural used in rule texts, e.g. `fields`.
+    fn plural() -> &'static str;
+    /// The members of this kind declared by `item`.
+    fn members_of(item: &RustItem) -> Vec<Self>;
+    /// The underlying member.
+    fn as_member(&self) -> &RustMember;
+}
+
+/// Member kinds that have a body and can be called: `code_units()`, `methods()`, `constructors()`.
+pub trait CodeUnitLike: MemberLike {
+    /// Calls targeting this code unit.
+    fn calls_of_self(&self) -> Vec<RustAccess> {
+        self.as_member().calls_of_self()
+    }
+}
+
+impl MemberLike for RustMember {
+    fn plural() -> &'static str {
+        "members"
+    }
+    fn members_of(item: &RustItem) -> Vec<Self> {
+        item.members()
+    }
+    fn as_member(&self) -> &RustMember {
+        self
+    }
+}
+
+impl MemberLike for RustField {
+    fn plural() -> &'static str {
+        "fields"
+    }
+    fn members_of(item: &RustItem) -> Vec<Self> {
+        item.fields()
+    }
+    fn as_member(&self) -> &RustMember {
+        &self.0
+    }
+}
+
+impl MemberLike for RustCodeUnit {
+    fn plural() -> &'static str {
+        "code units"
+    }
+    fn members_of(item: &RustItem) -> Vec<Self> {
+        item.code_units()
+    }
+    fn as_member(&self) -> &RustMember {
+        &self.0
+    }
+}
+
+impl CodeUnitLike for RustCodeUnit {}
+
+impl MemberLike for RustMethod {
+    fn plural() -> &'static str {
+        "methods"
+    }
+    fn members_of(item: &RustItem) -> Vec<Self> {
+        item.methods()
+    }
+    fn as_member(&self) -> &RustMember {
+        &self.0
+    }
+}
+
+impl CodeUnitLike for RustMethod {}
+
+impl MemberLike for RustConstructor {
+    fn plural() -> &'static str {
+        "constructors"
+    }
+    fn members_of(item: &RustItem) -> Vec<Self> {
+        item.constructors()
+    }
+    fn as_member(&self) -> &RustMember {
+        &self.0
+    }
+}
+
+impl CodeUnitLike for RustConstructor {}
 
 /// A parameter of a code unit (`JavaParameter`).
 #[derive(Clone, PartialEq, Eq, Hash)]
