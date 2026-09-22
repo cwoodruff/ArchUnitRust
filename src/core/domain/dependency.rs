@@ -135,6 +135,12 @@ impl Dependency {
     }
 
     /// Why the dependency exists.
+    /// For a macro invocation: the number of top-level arguments passed to the macro, if the
+    /// invocation could be parsed as a comma-separated expression list `[rust-only]`.
+    pub fn macro_argument_count(&self) -> Option<usize> {
+        self.data().macro_argument_count
+    }
+
     pub fn kind(&self) -> DependencyKind {
         self.data().kind
     }

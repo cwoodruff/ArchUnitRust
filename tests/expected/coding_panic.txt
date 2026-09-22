@@ -1,0 +1,5 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should panic' was violated (4 times):
+Method <coding_app::panics::Guard::exhaustive(u32)> invokes macro <std::unreachable> in (src/panics.rs:21)
+Method <coding_app::panics::Guard::explicit(u32)> invokes macro <std::panic> in (src/panics.rs:6)
+Method <coding_app::panics::Guard::never()> invokes macro <std::unimplemented> in (src/panics.rs:15)
+Method <coding_app::panics::Guard::not_yet()> invokes macro <std::todo> in (src/panics.rs:11)

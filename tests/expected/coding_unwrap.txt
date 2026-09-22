@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should call unwrap or expect outside test code, because errors should be propagated or handled, not crash the program' was violated (2 times):
+Method <coding_app::unwraps::Parser::parse_expected(&str)> calls method <<unresolved>::expect()> in (src/unwraps.rs:9)
+Method <coding_app::unwraps::Parser::parse_unwrapped(&str)> calls method <<unresolved>::unwrap()> in (src/unwraps.rs:5)

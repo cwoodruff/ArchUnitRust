@@ -1,0 +1,4 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should use unsafe' was violated (3 times):
+Method <coding_app::unsafety::RawBuffer::first()> contains an unsafe block in (src/unsafety.rs:12)
+Method <coding_app::unsafety::RawBuffer::get_unchecked(usize)> contains an unsafe block in (src/unsafety.rs:18)
+Method <coding_app::unsafety::RawBuffer::get_unchecked(usize)> is declared unsafe in (src/unsafety.rs:17)

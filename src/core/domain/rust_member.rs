@@ -291,6 +291,11 @@ impl RustMember {
         self.data().is_test_code
     }
 
+    /// The lines of `unsafe { .. }` blocks in the body, for code units `[rust-only]`.
+    pub fn unsafe_block_lines(&self) -> Vec<usize> {
+        self.data().unsafe_block_lines.clone()
+    }
+
     /// Whether this is a method, associated function, or free function.
     pub fn is_code_unit(&self) -> bool {
         self.kind() == MemberKind::Method
@@ -369,6 +374,17 @@ impl RustMember {
     /// `JavaCodeUnit.getReturnType()`; the unit type when omitted.
     pub fn return_type(&self) -> RustType {
         HasReturnType::return_type(self)
+    }
+
+    /// The error type `E` of a `Result<_, E>` return type, as written `[rust-only]`.
+    pub fn error_type(&self) -> Option<RustType> {
+        self.data().error_type.clone()
+    }
+
+    /// The item a type written in this member's signature refers to, e.g. `std::boxed::Box`
+    /// for `Box<dyn Error>` `[rust-only]`.
+    pub fn resolve_type(&self, type_: &RustType) -> Option<RustItem> {
+        type_.raw_item().map(|id| self.item(id))
     }
 
     /// `JavaCodeUnit.getRawReturnType()`.

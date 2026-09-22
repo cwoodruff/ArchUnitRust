@@ -1,0 +1,21 @@
+@startuml
+
+skinparam componentStyle uml2
+
+' The layers of tests/fixtures/layered_app
+[Controller] <<..controller..>> #white/PowderBlue
+[Service] <<..service..>> as service
+component [Persistence] <<..persistence..>> as persistence #PowderBlue
+[Core] <<..core..>>
+[Security] <<..security..>> <<..thirdparty..>> as security
+[Anticorruption] <<..anticorruption..>>
+
+[Controller] --> service : delegates to
+[Controller] -[#green]-> [Core]
+service ---> persistence
+service -left-> [Core]
+[Core] <-- [Anticorruption]
+security --> [Controller] : guards
+note top on link #lightgreen: security wraps the controllers
+
+@enduml

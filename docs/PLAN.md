@@ -139,7 +139,7 @@ A `syn::visit::Visit` over every item records `Dependency` records (see MAPPING 
 | `#[attr]`, `#[derive(A)]` | `is annotated with`; derives that resolve to a trait also add `implements` |
 | `Path::func(..)`, `func(..)` | `MethodCall` access (or `ConstructorCall` if the target is constructor-classified) |
 | `Type { .. }`, `Type(..)`, `Enum::Variant { .. }` | `ConstructorCall` |
-| `recv.method(..)` | `MethodCall` with receiver-type resolution: `self.m()` inside an impl resolves against the self type's inherent and trait methods; a local whose type is known from a `let x: T`, a parameter, or a direct constructor call resolves; otherwise the call is resolved **by unique name** across all imported methods and flagged `ResolutionKind::ByNameOnly`; if ambiguous it becomes an unresolved target `<unresolved>::method` |
+| `recv.method(..)` | `MethodCall` with receiver-type resolution: `self.m()` inside an impl resolves against the self type's inherent and trait methods; a local whose type is known from a `let x: T`, a parameter, or a direct constructor call resolves; otherwise the call is resolved **by unique name** across all imported methods and flagged `ResolutionKind::ByNameOnly` (never for names of `std` prelude trait methods such as `next`, `clone` or `into`, which would match a single local `impl Iterator` far too often); if ambiguous it becomes an unresolved target `<unresolved>::method` |
 | `recv.field`, `recv.field = v`, `&mut recv.field` | `FieldAccess` (`Get`/`Set`) with the same receiver-resolution rules |
 | function path used as a value | `FunctionReference` |
 | `Foo::<T>`, `TypeId::of::<T>()`, `size_of::<T>()` | `references class object` |

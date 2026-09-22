@@ -45,11 +45,136 @@ struct BodyJob {
 }
 
 /// A dependency recorded while visiting bodies, other than accesses.
+/// Method names of `std` prelude traits and the most common `std` types; a call with an
+/// unknown receiver is never resolved to a local method of one of these names.
+const STD_TRAIT_METHOD_NAMES: &[&str] = &[
+    "next",
+    "clone",
+    "clone_from",
+    "to_string",
+    "to_owned",
+    "into",
+    "from",
+    "try_into",
+    "try_from",
+    "as_ref",
+    "as_mut",
+    "borrow",
+    "borrow_mut",
+    "iter",
+    "iter_mut",
+    "into_iter",
+    "len",
+    "is_empty",
+    "eq",
+    "ne",
+    "cmp",
+    "partial_cmp",
+    "lt",
+    "le",
+    "gt",
+    "ge",
+    "max",
+    "min",
+    "hash",
+    "fmt",
+    "default",
+    "drop",
+    "deref",
+    "deref_mut",
+    "get",
+    "get_mut",
+    "insert",
+    "remove",
+    "push",
+    "pop",
+    "contains",
+    "contains_key",
+    "map",
+    "map_err",
+    "and_then",
+    "or_else",
+    "unwrap",
+    "unwrap_or",
+    "unwrap_or_else",
+    "unwrap_or_default",
+    "expect",
+    "ok",
+    "err",
+    "is_some",
+    "is_none",
+    "is_ok",
+    "is_err",
+    "as_str",
+    "as_slice",
+    "as_bytes",
+    "keys",
+    "values",
+    "entry",
+    "extend",
+    "collect",
+    "filter",
+    "find",
+    "any",
+    "all",
+    "count",
+    "sum",
+    "fold",
+    "for_each",
+    "enumerate",
+    "zip",
+    "chain",
+    "rev",
+    "take",
+    "skip",
+    "peek",
+    "sort",
+    "sort_by",
+    "sort_by_key",
+    "dedup",
+    "join",
+    "split",
+    "trim",
+    "starts_with",
+    "ends_with",
+    "replace",
+    "parse",
+    "lock",
+    "read",
+    "write",
+    "flush",
+    "send",
+    "recv",
+    "await_",
+    "poll",
+    "call",
+    "add",
+    "sub",
+    "mul",
+    "div",
+    "neg",
+    "not",
+    "index",
+    "index_mut",
+    "first",
+    "last",
+    "copied",
+    "cloned",
+    "then",
+    "then_some",
+    "matches",
+    "chars",
+    "bytes",
+    "lines",
+    "wrapping_add",
+];
+
 struct ReferenceDep {
     origin_member: MemberId,
     target: ItemId,
     kind: DependencyKind,
     line: usize,
+    macro_argument_count: Option<usize>,
 }
 
 pub(crate) struct Builder<'a> {
@@ -1000,6 +1125,7 @@ impl Builder<'_> {
             implemented_trait,
             type_parameters: type_params,
             item,
+            unsafe_block_lines: Vec::new(),
         });
         self.apply_member_annotations(member, attrs, scope);
         if let Some(block) = body {
@@ -1072,6 +1198,7 @@ impl Builder<'_> {
             implemented_trait: None,
             type_parameters: Vec::new(),
             item: None,
+            unsafe_block_lines: Vec::new(),
         });
         self.apply_member_annotations(member, attrs, scope);
         member
@@ -1195,6 +1322,7 @@ impl Builder<'_> {
                         implemented_trait: None,
                         type_parameters: Vec::new(),
                         item: None,
+                        unsafe_block_lines: Vec::new(),
                     });
                     self.apply_member_annotations(member, &variant.attrs, scope);
                     self.add_fields(id, &variant.fields, &name, scope, &ctx, file, is_test);
@@ -1276,6 +1404,7 @@ impl Builder<'_> {
                                 implemented_trait: None,
                                 type_parameters: Vec::new(),
                                 item: None,
+                                unsafe_block_lines: Vec::new(),
                             });
                         }
                         _ => {}
@@ -1471,6 +1600,7 @@ impl Builder<'_> {
                                 implemented_trait: trait_,
                                 type_parameters: Vec::new(),
                                 item: None,
+                                unsafe_block_lines: Vec::new(),
                             });
                         }
                         _ => {}
@@ -1522,6 +1652,7 @@ impl Builder<'_> {
                     kind: DependencyKind::MacroInvocation,
                     description,
                     location,
+                    macro_argument_count: None,
                 });
             }
         }
@@ -1597,6 +1728,11 @@ impl Builder<'_> {
         kind: MemberKind,
         needs_receiver: bool,
     ) -> Option<MemberId> {
+        if needs_receiver && STD_TRAIT_METHOD_NAMES.contains(&name) {
+            // `iter.next()`, `x.clone()`, ...: almost always a std trait method on a type the
+            // import cannot see, so a unique local method of the same name is a false match.
+            return None;
+        }
         let mut found = None;
         for (id, member) in self.graph.members.iter().enumerate() {
             if member.kind == kind
@@ -1631,6 +1767,7 @@ impl Builder<'_> {
             kind,
             description,
             location,
+            macro_argument_count: None,
         });
     }
 
@@ -1979,7 +2116,13 @@ impl Builder<'_> {
                 member_description(&self.graph, r.origin_member),
                 self.graph.items[r.target].name
             );
+            let before = self.graph.dependencies.len();
             self.add_dependency(origin, r.target, r.kind, description, location);
+            if self.graph.dependencies.len() > before {
+                if let Some(added) = self.graph.dependencies.last_mut() {
+                    added.macro_argument_count = r.macro_argument_count;
+                }
+            }
         }
     }
 }
@@ -2191,6 +2334,7 @@ impl BodyVisitor<'_, '_> {
             target,
             kind,
             line: line_of(span),
+            macro_argument_count: None,
         });
     }
 
@@ -2477,9 +2621,7 @@ impl BodyVisitor<'_, '_> {
             .last()
             .map(|s| s.ident.span())
             .unwrap_or_else(Span::call_site);
-        if let Some(target) = self.b.resolve_macro_target(&mac.path, self.scope) {
-            self.record_reference(target, DependencyKind::MacroInvocation, span);
-        }
+        let target = self.b.resolve_macro_target(&mac.path, self.scope);
         let parsed = mac
             .parse_body_with(
                 syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
@@ -2504,6 +2646,15 @@ impl BodyVisitor<'_, '_> {
                     rewritten,
                 )
             });
+        if let Some(target) = target {
+            self.b.references.push(ReferenceDep {
+                origin_member: self.member,
+                target,
+                kind: DependencyKind::MacroInvocation,
+                line: line_of(span),
+                macro_argument_count: parsed.as_ref().ok().map(|exprs| exprs.len()),
+            });
+        }
         if let Ok(exprs) = parsed {
             for expr in exprs.iter() {
                 self.visit_expr(expr);
@@ -2926,6 +3077,14 @@ impl<'ast> Visit<'ast> for BodyVisitor<'_, '_> {
 
     fn visit_stmt_macro(&mut self, m: &'ast syn::StmtMacro) {
         self.handle_macro(&m.mac);
+    }
+
+    fn visit_expr_unsafe(&mut self, block: &'ast syn::ExprUnsafe) {
+        let line = line_of(block.unsafe_token.span);
+        self.b.graph.members[self.member]
+            .unsafe_block_lines
+            .push(line);
+        syn::visit::visit_expr_unsafe(self, block);
     }
 
     fn visit_expr_closure(&mut self, closure: &'ast syn::ExprClosure) {

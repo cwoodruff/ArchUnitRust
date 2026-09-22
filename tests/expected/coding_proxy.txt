@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should directly call other methods declared in the same class that are annotated with @transactional, because it bypasses the proxy mechanism' was violated (2 times):
+Method <coding_app::proxy::OrderService::place_two_orders()> calls method <coding_app::proxy::OrderService::place_order()> in (src/proxy.rs:13)
+Method <coding_app::proxy::OrderService::place_two_orders()> calls method <coding_app::proxy::OrderService::place_order()> in (src/proxy.rs:13)

@@ -1,0 +1,10 @@
+[package]
+name = "coding_app"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+fixture_macros = { path = "../fixture_macros" }
+
+[workspace]

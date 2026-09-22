@@ -1,0 +1,5 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should access @deprecated members or should depend on @deprecated classes, because there should be a better alternative' was violated (4 times):
+Method <coding_app::deprecation::Caller::uses_deprecated_function()> calls method <coding_app::deprecation::old_helper()> in (src/deprecation.rs:42)
+Method <coding_app::deprecation::Caller::uses_deprecated_method()> calls method <coding_app::deprecation::NewApi::legacy_run()> in (src/deprecation.rs:38)
+Method <coding_app::deprecation::Caller::uses_deprecated_type()> calls constructor <coding_app::deprecation::OldApi> in (src/deprecation.rs:34)
+Method <coding_app::deprecation::Caller::uses_deprecated_type()> calls method <coding_app::deprecation::OldApi::run()> in (src/deprecation.rs:34)

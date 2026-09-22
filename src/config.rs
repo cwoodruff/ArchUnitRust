@@ -30,6 +30,7 @@ use std::sync::{Arc, LazyLock, RwLock};
 use regex::Regex;
 
 use crate::lang::FailureDisplayFormat;
+use crate::library::freeze::{ViolationLineMatcher, ViolationStore};
 
 /// The file, relative to the crate root, listing regexes of violations to ignore.
 pub const ARCHUNIT_IGNORE_PATTERNS_FILE_NAME: &str = "archunit_ignore_patterns.txt";
@@ -52,6 +53,11 @@ pub const CLASS_RESOLVER_PACKAGES_PROPERTY_NAME: &str = "class_resolver.packages
 /// (`import.include_targets = ["lib", "bin", "test", "example", "bench"]`).
 pub const INCLUDE_TARGETS_PROPERTY_NAME: &str = "import.include_targets";
 
+/// `[rust-only]` whether binary targets are exempt from the standard-stream and process-exit
+/// coding rules (`import.exclude_binaries_from_coding_rules`, default `true`).
+pub const EXCLUDE_BINARIES_FROM_CODING_RULES_PROPERTY_NAME: &str =
+    "import.exclude_binaries_from_coding_rules";
+
 /// The configuration key controlling whether rules fail when they check nothing
 /// (`archRule.failOnEmptyShould`).
 pub const FAIL_ON_EMPTY_SHOULD_PROPERTY_NAME: &str = "arch_rule.fail_on_empty_should";
@@ -69,8 +75,13 @@ pub const MAX_NUMBER_OF_DEPENDENCIES_PER_EDGE_PROPERTY_NAME: &str =
 pub struct ArchConfiguration {
     ignore_patterns: Option<Vec<Regex>>,
     failure_display_format: Option<Arc<dyn FailureDisplayFormat>>,
+    violation_store_factory: Option<ViolationStoreFactory>,
+    violation_line_matcher: Option<Arc<dyn ViolationLineMatcher>>,
     properties: std::collections::HashMap<String, String>,
 }
+
+/// Creates the [`ViolationStore`] used by `FreezingArchRule::freeze` (`freeze.store`).
+pub type ViolationStoreFactory = Arc<dyn Fn() -> Box<dyn ViolationStore> + Send + Sync>;
 
 impl std::fmt::Debug for ArchConfiguration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -96,6 +107,8 @@ impl Default for ArchConfiguration {
         Self {
             ignore_patterns: None,
             failure_display_format: None,
+            violation_store_factory: None,
+            violation_line_matcher: None,
             properties: find_configuration_file(&crate::core::importer::current_crate_dir())
                 .map(|file| read_properties(&file))
                 .unwrap_or_default(),
@@ -323,6 +336,33 @@ impl ArchConfiguration {
     /// Sets the format used to render failure reports.
     pub fn set_failure_display_format(format: Arc<dyn FailureDisplayFormat>) {
         Self::update(|c| c.failure_display_format = Some(format));
+    }
+
+    /// `[rust-only]` whether binary targets are exempt from the coding rules about standard
+    /// streams and `process::exit` (default `true`).
+    pub fn exclude_binaries_from_coding_rules(&self) -> bool {
+        self.bool_property(EXCLUDE_BINARIES_FROM_CODING_RULES_PROPERTY_NAME, true)
+    }
+
+    /// The factory for the violation store of frozen rules, if one was configured
+    /// (Java: the `freeze.store` class name).
+    pub fn violation_store_factory(&self) -> Option<ViolationStoreFactory> {
+        self.violation_store_factory.clone()
+    }
+
+    /// Configures the violation store used by `FreezingArchRule::freeze` (`freeze.store`).
+    pub fn set_violation_store_factory(factory: ViolationStoreFactory) {
+        Self::update(|c| c.violation_store_factory = Some(factory));
+    }
+
+    /// The line matcher for frozen rules, if one was configured (Java: `freeze.lineMatcher`).
+    pub fn violation_line_matcher(&self) -> Option<Arc<dyn ViolationLineMatcher>> {
+        self.violation_line_matcher.clone()
+    }
+
+    /// Configures the line matcher used by `FreezingArchRule::freeze` (`freeze.lineMatcher`).
+    pub fn set_violation_line_matcher(matcher: Arc<dyn ViolationLineMatcher>) {
+        Self::update(|c| c.violation_line_matcher = Some(matcher));
     }
 }
 

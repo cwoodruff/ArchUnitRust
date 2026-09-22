@@ -2,8 +2,9 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
+use super::annotation::RustAnnotation;
 use super::graph::{AccessId, Graph};
-use super::properties::{HasName, HasOwner, HasSourceCodeLocation, ItemSelector};
+use super::properties::{CanBeAnnotated, HasName, HasOwner, HasSourceCodeLocation, ItemSelector};
 use super::rust_item::RustItem;
 use super::rust_member::{RustCodeUnit, RustMember};
 use super::source_code_location::SourceCodeLocation;
@@ -268,6 +269,16 @@ impl HasDescription for AccessTarget {
 impl HasName for AccessTarget {
     fn name(&self) -> String {
         self.data().target_name.clone()
+    }
+}
+
+impl CanBeAnnotated for AccessTarget {
+    /// The annotations of the resolved member(s); empty for unresolved targets.
+    fn annotations(&self) -> Vec<RustAnnotation> {
+        self.resolve()
+            .iter()
+            .flat_map(|m| m.annotations())
+            .collect()
     }
 }
 

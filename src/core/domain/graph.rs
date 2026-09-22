@@ -105,6 +105,8 @@ pub(crate) struct MemberData {
     pub type_parameters: Vec<TypeParameter>,
     /// For free functions: the function item this member stands for.
     pub item: Option<ItemId>,
+    /// Lines of `unsafe { .. }` blocks in the body.
+    pub unsafe_block_lines: Vec<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -134,6 +136,8 @@ pub(crate) struct DependencyData {
     pub kind: DependencyKind,
     pub description: String,
     pub location: SourceCodeLocation,
+    /// For macro invocations: the number of top-level arguments, if the body could be parsed.
+    pub macro_argument_count: Option<usize>,
 }
 
 #[derive(Debug, Default)]

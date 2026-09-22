@@ -299,7 +299,8 @@ The port keeps both notions.
 | — | `use` import | `[rust-only]` `imports` (an unused import still counts; ArchUnit has no import dependency because bytecode has none) |
 | — | type alias target, `const`/`static` type, `impl` self type | `has type` |
 | — | path expressions naming a `const`, `static` or type (`let x: T`, `as T`, turbofish, patterns) | `[rust-only]` `references` |
-| — | macro invocation arguments | Best effort: arguments of well-known macros (`println!`, `format!`, `vec!`, `assert!`, `write!`, `matches!`, `dbg!`, `panic!`, `todo!`, `unimplemented!`, `unreachable!`, and any macro whose input parses as comma-separated expressions) are parsed and visited. Every invocation yields a `[rust-only]` `invokes macro` dependency on the macro item (std macros resolve to `std::<name>`) |
+| — | `unsafe { .. }` blocks | `[rust-only]` not a dependency; `RustMember::unsafe_block_lines()` lists them for `GeneralCodingRules::USE_UNSAFE` |
+| — | macro invocation arguments | Best effort: arguments of well-known macros (`println!`, `format!`, `vec!`, `assert!`, `write!`, `matches!`, `dbg!`, `panic!`, `todo!`, `unimplemented!`, `unreachable!`, and any macro whose input parses as comma-separated expressions) are parsed and visited. Every invocation yields a `[rust-only]` `invokes macro` dependency on the macro item (std macros resolve to `std::<name>`); `Dependency::macro_argument_count()` records the number of top-level arguments for `ASSERTIONS_SHOULD_HAVE_DETAIL_MESSAGE` |
 
 Description format (identical to Java, with `Item` in place of `Class`):
 
@@ -318,7 +319,11 @@ their best-known path so rules like `have_name_matching` still work on them.
 (or a type alias that resolves to one, e.g. `io::Result<T>`, `anyhow::Result<T>`) as
 "declaring throwable of type `E`". `declare_throwable_of_type("std::io::Error")` therefore
 matches `fn f() -> io::Result<()>`. Functions that can panic are not considered to throw;
-`[rust-only]` conditions cover `panic!`/`unwrap` (see §5.5).
+`[rust-only]` conditions cover `panic!`/`unwrap` (see §5.4). `RustMember::error_type()` returns
+the error type as written and `resolve_type(..)` the item it names, which is how
+`THROW_GENERIC_EXCEPTIONS` recognises `Box<dyn Error>`. `AccessTarget` implements
+`CanBeAnnotated` through its resolved member(s), so `access_target_where(target(annotated_with(..)))`
+works as in Java.
 
 ---
 
@@ -603,42 +608,42 @@ Examples the tests must reproduce verbatim:
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `ACCESS_STANDARD_STREAMS` / `NO_CLASSES_SHOULD_ACCESS_STANDARD_STREAMS` | `ACCESS_STANDARD_STREAMS` / `NO_CLASSES_SHOULD_ACCESS_STANDARD_STREAMS` | P5 | Invocations of `print!`, `println!`, `eprint!`, `eprintln!`, `dbg!`, and calls to `std::io::stdout/stderr/stdin`. Applies to library and test code; binary targets are excluded by default because printing is their job (configurable) |
-| `THROW_GENERIC_EXCEPTIONS` / `NO_CLASSES_SHOULD_THROW_GENERIC_EXCEPTIONS` | `THROW_GENERIC_EXCEPTIONS` / `NO_CLASSES_SHOULD_THROW_GENERIC_EXCEPTIONS` | P5 | "Generic exception" ≙ generic error type in a `Result`: `Box<dyn Error>`, `anyhow::Error`/`eyre::Report`, `String`, `&str`, `()`. Name kept; doc explains |
+| `ACCESS_STANDARD_STREAMS` / `NO_CLASSES_SHOULD_ACCESS_STANDARD_STREAMS` | `ACCESS_STANDARD_STREAMS` / `NO_CLASSES_SHOULD_ACCESS_STANDARD_STREAMS` (`LazyLock` statics; `.clone()` a condition into `should_with`) | done | Invocations of `print!`, `println!`, `eprint!`, `eprintln!`, `dbg!`, and calls to `std::io::stdout/stderr/stdin`. Applies to library and test code; binary targets are excluded unless `import.exclude_binaries_from_coding_rules = false` |
+| `THROW_GENERIC_EXCEPTIONS` / `NO_CLASSES_SHOULD_THROW_GENERIC_EXCEPTIONS` | `THROW_GENERIC_EXCEPTIONS` / `NO_CLASSES_SHOULD_THROW_GENERIC_EXCEPTIONS` | done | "Generic exception" ≙ generic error type in a `Result`: `Box<dyn Error (+ auto traits)>`, `anyhow::Error`/`eyre::Report`, `String`, `&str`, `()`. Report line: `Method <..> throws generic type <Box<dyn Error>> in (..)`. `have_generic_error_type()` is the matching `[rust-only]` member predicate |
 | `USE_JAVA_UTIL_LOGGING` / `NO_CLASSES_SHOULD_USE_JAVA_UTIL_LOGGING` | — | unsupported | Rust's standard library has no logging facade to discourage. Nearest custom rule: `no_classes().should().depend_on_classes_that().reside_in_a_package("log..")` |
 | `USE_JODATIME` / `NO_CLASSES_SHOULD_USE_JODATIME` | — | unsupported | No legacy date/time crate to steer away from |
 | `BE_ANNOTATED_WITH_AN_INJECTION_ANNOTATION` / `NO_CLASSES_SHOULD_USE_FIELD_INJECTION` | — | unsupported | No field-injection annotations in mainstream Rust DI |
-| `ASSERTIONS_SHOULD_HAVE_DETAIL_MESSAGE` | `ASSERTIONS_SHOULD_HAVE_DETAIL_MESSAGE` | P5 | `assert!`/`assert_eq!`/`assert_ne!`/`debug_assert*!` invoked without a message argument |
-| `DEPRECATED_API_SHOULD_NOT_BE_USED` | `DEPRECATED_API_SHOULD_NOT_BE_USED` | P5 | `#[deprecated]` targets within the import |
+| `ASSERTIONS_SHOULD_HAVE_DETAIL_MESSAGE` | `ASSERTIONS_SHOULD_HAVE_DETAIL_MESSAGE` (condition `INVOKE_ASSERTIONS_WITHOUT_DETAIL_MESSAGE`) | done | `assert!`/`debug_assert!` with one argument, `assert_eq!`/`assert_ne!`/`debug_assert_eq!`/`debug_assert_ne!` with two; description `no classes should invoke assertion macros without a detail message, because assertions should have a detail message` (Java: `call constructor AssertionError()`) |
+| `DEPRECATED_API_SHOULD_NOT_BE_USED` | `DEPRECATED_API_SHOULD_NOT_BE_USED` | done | `#[deprecated]` members and items within the import; description `no classes should access @deprecated members or should depend on @deprecated classes, because ..` |
 | `OLD_DATE_AND_TIME_CLASSES_SHOULD_NOT_BE_USED` | — | unsupported | No analog |
 | `testClassesShouldResideInTheSamePackageAsImplementation([suffix])` | — | unsupported | Rust unit tests already live in the implementation module; integration tests in `tests/` are separate by design |
-| `[rust-only]` | `NO_CLASSES_SHOULD_CALL_UNWRAP` (`.unwrap()`/`.expect()` outside test code), `NO_CLASSES_SHOULD_PANIC` (`panic!`, `unreachable!`, `todo!`, `unimplemented!`), `NO_LIBRARY_CODE_SHOULD_CALL_PROCESS_EXIT` (`std::process::exit` outside binary targets), `NO_CLASSES_SHOULD_USE_UNSAFE`, `NO_CLASSES_SHOULD_USE_PRINTLN_OUTSIDE_BINARIES` (alias of the standard-streams rule scoped as requested) | P5 | Each has the matching `ArchCondition` constant (`CALL_UNWRAP`, `PANIC`, `CALL_PROCESS_EXIT`, `USE_UNSAFE`) |
-| `DependencyRules.NO_CLASSES_SHOULD_DEPEND_UPPER_PACKAGES` / `dependOnUpperPackages()` | `NO_CLASSES_SHOULD_DEPEND_UPPER_PACKAGES` / `depend_on_upper_packages()` | P5 | `super::` and ancestor-module dependencies |
-| `ProxyRules.no_classes_should_directly_call_other_methods_declared_in_the_same_class_that_are_annotated_with(A)` / `..that(pred)` / `directly_call_other_methods_declared_in_the_same_class_that[_are_annotated_with](..)` | same names | P5 | `self.other()` calls to methods carrying an attribute (`#[tracing::instrument]`, `#[cached]`, …) |
+| `[rust-only]` | `NO_CLASSES_SHOULD_CALL_UNWRAP` (`.unwrap()`/`.expect()` outside test code), `NO_CLASSES_SHOULD_PANIC` (`panic!`, `unreachable!`, `todo!`, `unimplemented!` outside test code), `NO_LIBRARY_CODE_SHOULD_CALL_PROCESS_EXIT` (`std::process::exit`/`abort` outside binary targets), `NO_CLASSES_SHOULD_USE_UNSAFE` (`unsafe` items, `unsafe fn`s, `unsafe {}` blocks) | done | Each has the matching `ArchCondition` static (`CALL_UNWRAP`, `PANIC`, `CALL_PROCESS_EXIT`, `USE_UNSAFE`). The planned `NO_CLASSES_SHOULD_USE_PRINTLN_OUTSIDE_BINARIES` alias was dropped: it is exactly `NO_CLASSES_SHOULD_ACCESS_STANDARD_STREAMS` with the default binary exclusion |
+| `DependencyRules.NO_CLASSES_SHOULD_DEPEND_UPPER_PACKAGES` / `dependOnUpperPackages()` | `dependency_rules::NO_CLASSES_SHOULD_DEPEND_UPPER_PACKAGES` / `depend_on_upper_packages()` | done | Origin module path starts with the target's module path + `::`. A `#[cfg(test)] mod tests` always depends on its parent; import with `DoNotIncludeTests` or exclude `..tests..` |
+| `ProxyRules.no_classes_should_directly_call_other_methods_declared_in_the_same_class_that_are_annotated_with(A)` / `..that(pred)` / `directly_call_other_methods_declared_in_the_same_class_that[_are_annotated_with](..)` | same names in `proxy_rules` (`impl Into<AnnotationSelector>` / `DescribedPredicate<AccessTarget>`) | done | `self.other()` calls to methods carrying an attribute (`#[transactional]`, `#[tracing::instrument]`, `#[cached]`, …); no bridge-method filter needed |
 
 ### 5.5 PlantUML (`library.plantuml.rules`)
 
 | Java | Rust | Status |
 |---|---|---|
-| `PlantUmlArchCondition.adhereToPlantUmlDiagram(URL/File/Path/String, Configuration)` | `adhere_to_plant_uml_diagram(impl AsRef<Path>, Configuration)` (+ `_from_str` for in-memory diagrams) | P5 |
-| `Configuration.consideringAllDependencies()` / `consideringOnlyDependenciesInDiagram()` / `consideringOnlyDependenciesInAnyPackage(..)` | same | P5 |
-| `ignoreDependenciesWithOrigin(pred)` / `ignoreDependenciesWithTarget(pred)` / `ignoreDependencies(Class,Class)/(String,String)/(pred)` | same (`_with` for the pred overload of `ignore_dependencies`) | P5 |
-| Diagram grammar: `[Component] <<..stereo..>> as alias #color`, arrows `-->`, `<--`, `-[#c]->`, `-up->`, any dash count, labels `: text`, comments `'`, `note` lines ignored | identical, stereotypes are module identifiers (`<<..adapter::rest..>>`) | P5 |
-| `PlantUmlParseException`, `IllegalDiagramException` | `PlantUmlError::{Parse, IllegalDiagram}` | P5 |
+| `PlantUmlArchCondition.adhereToPlantUmlDiagram(URL/File/Path/String, Configuration)` | `plantuml::adhere_to_plant_uml_diagram(impl AsRef<Path>, Configuration)` (panics like Java), `try_adhere_to_plant_uml_diagram(..) -> Result`, `adhere_to_plant_uml_diagram_from_str(name, text, ..)` for in-memory diagrams | done |
+| `Configuration.consideringAllDependencies()` / `consideringOnlyDependenciesInDiagram()` / `consideringOnlyDependenciesInAnyPackage(..)` | same (`&[&str]` instead of varargs) | done |
+| `ignoreDependenciesWithOrigin(pred)` / `ignoreDependenciesWithTarget(pred)` / `ignoreDependencies(Class,Class)/(String,String)/(pred)` | same (`ignore_dependencies(&str, &str)`, `ignore_dependencies_with(DescribedPredicate<Dependency>)`); descriptions identical (`adhere to PlantUML diagram <x.puml>, ignoring dependencies with origin ..`) | done |
+| Diagram grammar: `[Component] <<..stereo..>> as alias #color`, arrows `-->`, `<--`, `-[#c]->`, `-up->`, any dash count, labels `: text`, comments `'`, `note` lines ignored | identical, stereotypes are module identifiers (`<<..adapter::rest..>>` or the Java spelling `<<..adapter.rest..>>`); `PlantUmlDiagram::parse[_file]` is public | done |
+| `PlantUmlParseException`, `IllegalDiagramException` | `PlantUmlError::{Parse, IllegalDiagram}` with Java's messages; violation lines `Item <name> is not contained in any component` / `.. may not be contained in more than one component, but is contained in [A, B]` (Java: `Class <name> ..`) | done |
 
 ### 5.6 Freezing (`library.freeze`)
 
 | Java | Rust | Status | Note |
 |---|---|---|---|
-| `FreezingArchRule.freeze(rule)` | `FreezingArchRule::freeze(rule)` / `freeze(rule)` | P5 | |
-| `persistIn(ViolationStore)` / `associateViolationLinesVia(ViolationLineMatcher)` | `persist_in(..)` / `associate_violation_lines_via(..)` | P5 | |
-| `as` / `because` / `allowEmptyShould` / `check` / `evaluate` / `getDescription` | same | P5 | |
-| `ViolationStore` (`initialize(Properties)`, `contains(rule)`, `save(rule, violations)`, `getViolations(rule)`) | `trait ViolationStore` with `initialize(&Properties)`, `contains`, `save`, `violations` | P5 | |
-| `TextFileBasedViolationStore` (`stored.rules` index in Java `.properties` format + one UUID-named file per rule) | `TextFileBasedViolationStore`, byte-compatible file format so stores can be shared with a Java project's conventions | P5 | |
-| `ViolationStoreFactory` (`freeze.store` class name) | `ArchConfiguration::set_violation_store(..)` | P5 partial | no class-name instantiation |
-| `ViolationLineMatcher` + default fuzzy matcher (ignores line numbers and `$N` suffixes) | `trait ViolationLineMatcher` + `FuzzyViolationLineMatcher` (ignores `:N)` line numbers and closure/`{{closure}}` numbering) | P5 | |
-| `freeze.store.default.path` / `allowStoreCreation` / `allowStoreUpdate` / `freeze.refreeze` / `freeze.lineMatcher` | `archunit.toml` `[freeze] store.default.path`, `store.default.allow_store_creation`, `store.default.allow_store_update`, `refreeze`; `line_matcher` unsupported by name | P5 | |
-| `StoreInitializationFailedException`, `StoreReadException`, `StoreUpdateFailedException`, `ViolationLineMatcherInitializationFailedException` | `FreezeError` variants | P5 | |
+| `FreezingArchRule.freeze(rule)` | `FreezingArchRule::freeze(rule)` / `freeze(rule)` | done | `Debug` prints `FreezingArchRule{<description>}` like Java's `toString` |
+| `persistIn(ViolationStore)` / `associateViolationLinesVia(ViolationLineMatcher)` | `persist_in(..)` / `associate_violation_lines_via(..)` (closures `Fn(&str, &str) -> bool` are matchers) | done | |
+| `as` / `because` / `allowEmptyShould` / `check` / `evaluate` / `getDescription` | same | done | Store failures panic from `evaluate` with the `FreezeError` message (Java throws) |
+| `ViolationStore` (`initialize(Properties)`, `contains(rule)`, `save(rule, violations)`, `getViolations(rule)`) | `trait ViolationStore` with `initialize(&HashMap)`, `contains(&dyn ArchRule)`, `save`, `violations`, all but `contains` returning `Result<_, FreezeError>` | done | `InMemoryViolationStore` is a `[rust-only]` test double |
+| `TextFileBasedViolationStore` (`stored.rules` index in Java `.properties` format + one UUID-named file per rule) | `TextFileBasedViolationStore` (`new()`, `with_file_name_strategy(..)` for `RuleViolationFileNameStrategy`) | done | Same file layout and escaping (`.properties` key escaping, `\`+newline inside violations); the index header comment differs |
+| `ViolationStoreFactory` (`freeze.store` class name) | `ArchConfiguration::set_violation_store_factory(Arc<dyn Fn() -> Box<dyn ViolationStore>>)` | partial | No instantiation by class name |
+| `ViolationLineMatcher` + default fuzzy matcher (ignores line numbers and `$N` suffixes) | `trait ViolationLineMatcher` + `FuzzyViolationLineMatcher` (same algorithm: ignores `:N)` and `$N`); `ArchConfiguration::set_violation_line_matcher(..)` replaces `freeze.lineMatcher` | done | |
+| `freeze.store.default.path` / `allowStoreCreation` / `allowStoreUpdate` / `freeze.refreeze` / `freeze.lineMatcher` | `archunit.toml` `[freeze.store.default] path`, `allow_store_creation`, `allow_store_update` (the Java spellings are accepted too), `[freeze] refreeze`; `freeze.store`/`freeze.line_matcher` class names unsupported (programmatic setters instead) | done | Error texts: `Creating new violation store is disabled (enable by configuration freeze.store.default.allow_store_creation=true)` and the update counterpart |
+| `StoreInitializationFailedException`, `StoreReadException`, `StoreUpdateFailedException`, `ViolationLineMatcherInitializationFailedException` | `FreezeError::{StoreInitializationFailed, StoreRead, StoreUpdateFailed}` | done | No matcher-initialization error without class-name instantiation |
 
 ### 5.7 Metrics (`library.metrics`)
 
@@ -689,10 +694,11 @@ named `harness`; every annotation keeps its ArchUnit name.
 | `failureDisplayFormat` | — (programmatic only) | partial | |
 | `extension.<id>.enabled` / `extension.<id>.<prop>` | `[extension.<id>] enabled`, … | deferred | |
 | `cycles.maxNumberToDetect` / `cycles.maxNumberOfDependenciesPerEdge` | `[cycles] max_number_to_detect`, `max_number_of_dependencies_per_edge` | done | Read via `ArchConfiguration::max_number_of_cycles_to_detect()` / `max_number_of_dependencies_per_edge()` |
-| `freeze.*` | `[freeze] …` (see §5.6) | P5 | |
+| `freeze.*` | `[freeze] …` (see §5.6) | done | |
 | `junit.*` | — | unsupported | see §6 |
 | `[rust-only]` | `[import] include_targets = ["lib", "proc-macro", "bin", "test", "example", "bench"]` (default: all) | done | Applied by `CrateImporter::new()` as an import option |
-| `[rust-only]` | `[import] exclude_binaries_from_coding_rules = true`, `[report] item_prefix = "Item"` (allows `Struct`/`Trait`/… kind prefixes instead of the generic `Item`) | P5 | |
+| `[rust-only]` | `[import] exclude_binaries_from_coding_rules = true` | done | Read by `GeneralCodingRules` |
+| `[rust-only]` | `[report] item_prefix = "Item"` (allows `Struct`/`Trait`/… kind prefixes instead of the generic `Item`) | deferred | Not needed by the ported examples; the generic `Item` keeps reports byte-compatible |
 
 ---
 
@@ -826,6 +832,34 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 * The `import.dependency_resolution_process.*` keys are `unsupported` (accepted, ignored):
   there is nothing iterative to bound in a source import.
 
+### Phase 5
+
+* **Coding rules are `LazyLock` statics.** Java's `public static final ArchCondition`
+  constants become `pub static X: LazyLock<ArchCondition<RustItem>>`; conditions are cloned
+  into `should_with(..)`, rules are checked through `Deref` (`NO_CLASSES_SHOULD_PANIC.check(..)`).
+  Event orientation follows Java: a condition such as `access standard streams` emits one
+  event per access or macro invocation, *satisfied* when it matches, so `no_classes()` reports
+  exactly the matches. The positive form (`classes().should_with(ACCESS_STANDARD_STREAMS)`)
+  therefore fails on the first non-matching call, exactly as `classes().should(accessField(..))`
+  does in Java.
+* **Assertions and unsafe need model support.** `Dependency::macro_argument_count()` and
+  `RustMember::unsafe_block_lines()` are the two `[rust-only]` model additions of this phase;
+  `RustMember::error_type()`/`resolve_type()` expose the written error type for the generic
+  exception rule.
+* **PlantUML** ports the parser regex for regex, including the `Splitter.limit(2)` behaviour
+  (only the first arrow of a line counts, one per direction) and the `: label` cut-off. The
+  only wording change is `Item` for `Class` in the two "not contained" messages.
+* **Freezing** keeps Java's file format so a store can be committed next to a Java project's:
+  `stored.rules` is a `java.util.Properties` file (escaping ported, header comment differs)
+  and rule files escape embedded newlines with a backslash. The default store path is
+  relative to the working directory, as in Java; under `cargo test` that is the package root.
+  `ViolationStore` methods return `Result<_, FreezeError>` and `FreezingArchRule::evaluate`
+  panics with the message, since `ArchRule::evaluate` is infallible.
+* **Resolution fix found by dogfooding.** The harness test that checks this crate's own
+  layering caught `iter.next()` in `base` being resolved to the crate's only method named
+  `next` (the freeze line matcher). Unique-name resolution now skips the method names of
+  `std` prelude traits and common `std` types (PLAN.md §4).
+
 ## 10. Phase status log
 
 | Phase | Status | Summary |
@@ -835,5 +869,5 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 | 2 | done | `ArchRule`, `ArchCondition`/`ConditionLogic`, events, `EvaluationResult`/`FailureReport` in ArchUnit's format, ignore patterns, `ArchConfiguration` (programmatic), all `ArchConditions`, the full `classes()`/`no_classes()`/`the_class()`/members/`all()` syntax; 25 lang tests incl. golden reports |
 | 3 | done | `library::architectures` (layered + onion), `library::dependencies` (slices, `be_free_of_cycles`, `not_depend_on_each_other`, `ignore_dependency`), `library::cycle_detection` (Johnson/Tarjan port, `CycleArchCondition`), cycle configuration properties; 24 library tests incl. golden reports for layered, onion, simple cycle, simple scenario and controller slices |
 | 4 | done | `archunit-macros` (`#[analyze_classes]`, `#[arch_test]`, `#[arch_rules]`, `#[arch_ignore]`, `#[arch_tag]`), `archunit::harness` (`analyze_classes()` builder, `CacheMode`, `LocationProvider`, `ArchTests`, cache), `archunit.toml` + `ARCHUNIT_*` overrides with importer settings; 11 harness tests (macro-generated) + 5 config tests |
-| 5 | pending | |
+| 5 | done | `library::general_coding_rules` (standard streams, generic exceptions, assertions, deprecated API + rust-only unwrap/panic/process-exit/unsafe), `dependency_rules`, `proxy_rules`, `library::plantuml` (parser + `adhere_to_plant_uml_diagram`), `library::freeze` (`FreezingArchRule`, `TextFileBasedViolationStore` in Java's format, fuzzy line matcher); fixture `coding_app` and diagram `plantuml/layered_app.puml`; 8 coding-rule, 7 PlantUML and 15 freeze tests with 11 golden reports |
 | 6 | pending | |
