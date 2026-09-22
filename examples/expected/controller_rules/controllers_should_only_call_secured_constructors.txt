@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..controller..' should only call constructors that are declared in a package '..controller..' or are annotated with @secured' was violated (1 times):
+Constructor <layered_app::controller::SomeController::new()> calls constructor <layered_app::service::ServiceOne::new()> in (src/controller/mod.rs:23)

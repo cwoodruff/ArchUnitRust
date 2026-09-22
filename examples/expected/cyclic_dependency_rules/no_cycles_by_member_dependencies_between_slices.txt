@@ -1,0 +1,16 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'slices matching '..(membercycle).(*)..' should be free of cycles' was violated (1 times):
+Cycle detected: slice1 of membercycle -> 
+                slice2 of membercycle -> 
+                slice3 of membercycle -> 
+                slice4 of membercycle -> 
+                slice1 of membercycle
+  1. Dependencies of slice1 of membercycle
+    - Field <cyclic_app::membercycle::slice1::SliceOneWithFieldTypeInSliceTwo::two> has type <cyclic_app::membercycle::slice2::SliceTwoWithMethodReturnTypeOfSliceThree> in (src/membercycle/slice1.rs:4)
+  2. Dependencies of slice2 of membercycle
+    - Method <cyclic_app::membercycle::slice2::SliceTwoWithMethodReturnTypeOfSliceThree::three()> calls constructor <cyclic_app::membercycle::slice3::SliceThreeWithMethodParameterTypeOfSliceFour> in (src/membercycle/slice2.rs:7)
+    - Method <cyclic_app::membercycle::slice2::SliceTwoWithMethodReturnTypeOfSliceThree::three()> has return type <cyclic_app::membercycle::slice3::SliceThreeWithMethodParameterTypeOfSliceFour> in (src/membercycle/slice2.rs:6)
+  3. Dependencies of slice3 of membercycle
+    - Method <cyclic_app::membercycle::slice3::SliceThreeWithMethodParameterTypeOfSliceFour::four(SliceFourWithErrorTypeOfSliceOne)> has parameter of type <cyclic_app::membercycle::slice4::SliceFourWithErrorTypeOfSliceOne> in (src/membercycle/slice3.rs:6)
+  4. Dependencies of slice4 of membercycle
+    - Method <cyclic_app::membercycle::slice4::SliceFourWithErrorTypeOfSliceOne::fails()> has generic return type <std::result::Result> with type argument depending on <cyclic_app::membercycle::slice1::SliceOneWithFieldTypeInSliceTwo> in (src/membercycle/slice4.rs:6)
+    - Method <cyclic_app::membercycle::slice4::SliceFourWithErrorTypeOfSliceOne::fails()> throws type <cyclic_app::membercycle::slice1::SliceOneWithFieldTypeInSliceTwo> in (src/membercycle/slice4.rs:6)

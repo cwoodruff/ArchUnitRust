@@ -1,0 +1,18 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'slices matching '..(inheritancecycle).(*)..' should be free of cycles' was violated (2 times):
+Cycle detected: slice1 of inheritancecycle -> 
+                slice2 of inheritancecycle -> 
+                slice3 of inheritancecycle -> 
+                slice1 of inheritancecycle
+  1. Dependencies of slice1 of inheritancecycle
+    - Item <cyclic_app::inheritancecycle::slice1::ClassInSliceOneImplementingTraitOfSliceTwo> implements trait <cyclic_app::inheritancecycle::slice2::TraitInSliceTwo> in (src/inheritancecycle/slice1.rs:4)
+  2. Dependencies of slice2 of inheritancecycle
+    - Item <cyclic_app::inheritancecycle::slice2::TraitInSliceTwo> extends trait <cyclic_app::inheritancecycle::slice3::TraitInSliceThree> in (src/inheritancecycle/slice2.rs:3)
+  3. Dependencies of slice3 of inheritancecycle
+    - Item <cyclic_app::inheritancecycle::slice3::TraitInSliceThree> extends trait <cyclic_app::inheritancecycle::slice1::TraitInSliceOne> in (src/inheritancecycle/slice3.rs:3)
+Cycle detected: slice1 of inheritancecycle -> 
+                slice3 of inheritancecycle -> 
+                slice1 of inheritancecycle
+  1. Dependencies of slice1 of inheritancecycle
+    - Item <cyclic_app::inheritancecycle::slice1::ClassInSliceOneImplementingTraitOfSliceTwo> implements trait <cyclic_app::inheritancecycle::slice3::TraitInSliceThree> in (src/inheritancecycle/slice1.rs:4)
+  2. Dependencies of slice3 of inheritancecycle
+    - Item <cyclic_app::inheritancecycle::slice3::TraitInSliceThree> extends trait <cyclic_app::inheritancecycle::slice1::TraitInSliceOne> in (src/inheritancecycle/slice3.rs:3)

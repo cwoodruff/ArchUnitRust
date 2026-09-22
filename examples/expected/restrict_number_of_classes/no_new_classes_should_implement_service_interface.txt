@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement layered_app::service::ServiceInterface should contain number of elements less than or equal to '1', because from now on new classes should implement layered_app::service::internal::SomeInternalInterface' was violated (1 times):
+there is/are 3 element(s) in [layered_app::persistence::layerviolation::DaoCallingService, layered_app::service::ServiceOne, layered_app::service::internal::ServiceImpl]

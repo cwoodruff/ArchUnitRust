@@ -1,0 +1,7 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should throw generic exceptions' was violated (6 times):
+Function <coding_app::errors::free_boxed()> throws generic type <Box<dyn Error>> in (src/errors.rs:47)
+Method <coding_app::errors::Service::boxed()> throws generic type <Box<dyn Error>> in (src/errors.rs:18)
+Method <coding_app::errors::Service::boxed_send()> throws generic type <Box<dyn Error + Send + Sync>> in (src/errors.rs:22)
+Method <coding_app::errors::Service::static_str()> throws generic type <&str> in (src/errors.rs:30)
+Method <coding_app::errors::Service::stringly()> throws generic type <String> in (src/errors.rs:26)
+Method <coding_app::errors::Service::unit()> throws generic type <()> in (src/errors.rs:34)

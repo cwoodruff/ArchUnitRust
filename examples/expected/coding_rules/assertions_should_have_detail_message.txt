@@ -1,0 +1,7 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should invoke assertion macros without a detail message, because assertions should have a detail message' was violated (6 times):
+Function <coding_app::unwraps::tests::unwrap_in_tests_is_fine()> invokes macro <std::assert_eq> in (src/unwraps.rs:28)
+Method <coding_app::assertions::Checks::without_messages(u32, u32)> invokes macro <std::assert> in (src/assertions.rs:5)
+Method <coding_app::assertions::Checks::without_messages(u32, u32)> invokes macro <std::assert_eq> in (src/assertions.rs:6)
+Method <coding_app::assertions::Checks::without_messages(u32, u32)> invokes macro <std::assert_ne> in (src/assertions.rs:7)
+Method <coding_app::assertions::Checks::without_messages(u32, u32)> invokes macro <std::debug_assert> in (src/assertions.rs:8)
+Method <coding_app::assertions::Checks::without_messages(u32, u32)> invokes macro <std::debug_assert_eq> in (src/assertions.rs:9)

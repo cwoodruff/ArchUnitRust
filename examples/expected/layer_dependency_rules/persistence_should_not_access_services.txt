@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes that reside in a package '..persistence..' should access classes that reside in a package '..service..'' was violated (1 times):
+Method <layered_app::persistence::layerviolation::DaoCallingService::serve()> calls method <layered_app::service::ServiceOne::serve()> in (src/persistence/layerviolation.rs:10)

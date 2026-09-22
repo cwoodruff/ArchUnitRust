@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..controller..' or are annotated with @my_controller or are assignable to layered_app::controller::AbstractController should have simple name ending with 'Controller'' was violated (2 times):
+Item <layered_app::controller::WronglyNamed> does not have simple name ending with 'Controller' in (src/controller/mod.rs:51)
+Item <layered_app::controller::marshaller::Marshaller> does not have simple name ending with 'Controller' in (src/controller/marshaller.rs:3)

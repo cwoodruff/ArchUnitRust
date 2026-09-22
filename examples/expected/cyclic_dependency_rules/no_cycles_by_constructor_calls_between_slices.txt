@@ -1,0 +1,9 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'slices matching '..(constructorcycle).(*)..' should be free of cycles' was violated (1 times):
+Cycle detected: slice1 of constructorcycle -> 
+                slice2 of constructorcycle -> 
+                slice1 of constructorcycle
+  1. Dependencies of slice1 of constructorcycle
+    - Method <cyclic_app::constructorcycle::slice1::SliceOneCallingConstructorInSliceTwo::call_constructor()> calls constructor <cyclic_app::constructorcycle::slice2::SliceTwoWithConstructorParameterOfSliceOne::new(&SliceOneCallingConstructorInSliceTwo)> in (src/constructorcycle/slice1.rs:7)
+    - Method <cyclic_app::constructorcycle::slice1::SliceOneCallingConstructorInSliceTwo::call_constructor()> has return type <cyclic_app::constructorcycle::slice2::SliceTwoWithConstructorParameterOfSliceOne> in (src/constructorcycle/slice1.rs:6)
+  2. Dependencies of slice2 of constructorcycle
+    - Constructor <cyclic_app::constructorcycle::slice2::SliceTwoWithConstructorParameterOfSliceOne::new(&SliceOneCallingConstructorInSliceTwo)> has parameter of type <cyclic_app::constructorcycle::slice1::SliceOneCallingConstructorInSliceTwo> in (src/constructorcycle/slice2.rs:6)

@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no methods that are declared in classes that have name matching '.*Dao' should declare throwable of type layered_app::thirdparty::SqlError' was violated (1 times):
+Method <layered_app::persistence::first::dao::SomeDao::store(PersistentObject)> does declare throwable of type layered_app::thirdparty::SqlError in (src/persistence/first/dao/mod.rs:17)

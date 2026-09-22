@@ -1,0 +1,12 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'slices matching '..simplescenario.(*)..' should be free of cycles' was violated (1 times):
+Cycle detected: administration -> 
+                importer -> 
+                report -> 
+                administration
+  1. Dependencies of administration
+    - Constructor <cyclic_app::simplescenario::administration::AdministrationService::new(Box<ImportService>)> has generic parameter type <std::boxed::Box> with type argument depending on <cyclic_app::simplescenario::importer::ImportService> in (src/simplescenario/administration.rs:8)
+    - Field <cyclic_app::simplescenario::administration::AdministrationService::importer> has generic field type <std::boxed::Box> with type argument depending on <cyclic_app::simplescenario::importer::ImportService> in (src/simplescenario/administration.rs:4)
+  2. Dependencies of importer
+    - Field <cyclic_app::simplescenario::importer::ImportService::report> has generic field type <std::boxed::Box> with type argument depending on <cyclic_app::simplescenario::report::ReportService> in (src/simplescenario/importer.rs:4)
+  3. Dependencies of report
+    - Field <cyclic_app::simplescenario::report::ReportService::admin> has generic field type <std::boxed::Box> with type argument depending on <cyclic_app::simplescenario::administration::AdministrationService> in (src/simplescenario/report.rs:4)

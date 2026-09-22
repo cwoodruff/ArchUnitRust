@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..service..' and are annotated with @my_service should have simple name starting with 'Service'' was violated (1 times):
+Item <layered_app::service::BadlyNamedService> does not have simple name starting with 'Service' in (src/service/mod.rs:50)

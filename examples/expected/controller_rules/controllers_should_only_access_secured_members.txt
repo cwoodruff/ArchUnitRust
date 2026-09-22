@@ -1,0 +1,4 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..controller..' should only access members that are declared in a package '..controller..' or are annotated with @secured' was violated (3 times):
+Constructor <layered_app::controller::SomeController::new()> calls constructor <layered_app::service::ServiceOne::new()> in (src/controller/mod.rs:23)
+Method <layered_app::controller::CoreSatelliteController::call_core()> calls method <layered_app::core::VeryCentralCore::do_core_stuff()> in (src/controller/mod.rs:63)
+Method <layered_app::controller::SomeController::bypass_layers()> calls method <layered_app::persistence::first::dao::SomeDao::find_all()> in (src/controller/mod.rs:33)

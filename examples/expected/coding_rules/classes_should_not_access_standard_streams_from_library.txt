@@ -1,0 +1,8 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should access standard streams' was violated (7 times):
+Method <coding_app::streams::Console::print_all()> invokes macro <std::dbg> in (src/streams.rs:11)
+Method <coding_app::streams::Console::print_all()> invokes macro <std::eprint> in (src/streams.rs:10)
+Method <coding_app::streams::Console::print_all()> invokes macro <std::eprintln> in (src/streams.rs:9)
+Method <coding_app::streams::Console::print_all()> invokes macro <std::print> in (src/streams.rs:8)
+Method <coding_app::streams::Console::print_all()> invokes macro <std::println> in (src/streams.rs:7)
+Method <coding_app::streams::Console::write_directly()> calls method <std::io::stderr()> in (src/streams.rs:17)
+Method <coding_app::streams::Console::write_directly()> calls method <std::io::stdout()> in (src/streams.rs:16)

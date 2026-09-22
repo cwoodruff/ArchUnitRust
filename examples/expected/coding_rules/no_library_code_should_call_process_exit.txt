@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no library code should call std::process::exit, because only a binary's main may decide to end the process' was violated (2 times):
+Method <coding_app::exits::Terminator::abort_now()> calls method <std::process::abort()> in (src/exits.rs:9)
+Method <coding_app::exits::Terminator::stop()> calls method <std::process::exit()> in (src/exits.rs:5)

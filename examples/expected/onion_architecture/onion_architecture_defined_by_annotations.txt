@@ -1,0 +1,15 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'Onion architecture consisting of
+domain models (annotated with @domain_model)
+domain services (annotated with @domain_service)
+application services (annotated with @application)
+adapter 'cli' (annotated with @adapter("cli"))
+adapter 'persistence' (annotated with @adapter("persistence"))
+adapter 'rest' (annotated with @adapter("rest"))' was violated (8 times):
+Method <onion_app::adapter::cli::AdministrationCli::refresh_ui(&ShoppingController)> calls method <onion_app::adapter::rest::ShoppingController::refresh()> in (src/adapter/cli/mod.rs:17)
+Method <onion_app::adapter::cli::AdministrationCli::refresh_ui(&ShoppingController)> has parameter of type <onion_app::adapter::rest::ShoppingController> in (src/adapter/cli/mod.rs:16)
+Method <onion_app::application::ApplicationConfiguration::start_cli()> calls constructor <onion_app::adapter::cli::AdministrationCli> in (src/application/mod.rs:20)
+Method <onion_app::application::ApplicationConfiguration::start_cli()> has return type <onion_app::adapter::cli::AdministrationCli> in (src/application/mod.rs:19)
+Method <onion_app::domain::model::order::Order::save_with(&dyn OrderRepository)> calls method <onion_app::domain::service::shopping::OrderRepository::save(&Order)> in (src/domain/model/order.rs:30)
+Method <onion_app::domain::model::order::Order::save_with(&dyn OrderRepository)> has parameter of type <onion_app::domain::service::shopping::OrderRepository> in (src/domain/model/order.rs:29)
+Method <onion_app::domain::service::shopping::ShoppingService::notify(&ShoppingController)> calls method <onion_app::adapter::rest::ShoppingController::refresh()> in (src/domain/service/shopping.rs:40)
+Method <onion_app::domain::service::shopping::ShoppingService::notify(&ShoppingController)> has parameter of type <onion_app::adapter::rest::ShoppingController> in (src/domain/service/shopping.rs:39)

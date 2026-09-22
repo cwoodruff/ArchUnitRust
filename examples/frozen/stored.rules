@@ -1,0 +1,4 @@
+#
+#1790092629
+no\ classes\ should\ depend\ on\ classes\ that\ are\ assignable\ to\ layered_app\:\:thirdparty\:\:EntityManager=40d644e7-92e3-4700-88bd-906a897c7d8c
+no\ classes\ should\ depend\ on\ classes\ that\ reside\ in\ a\ package\ '..service..'=8e908fb4-223e-4b5e-bca3-55518710ef93

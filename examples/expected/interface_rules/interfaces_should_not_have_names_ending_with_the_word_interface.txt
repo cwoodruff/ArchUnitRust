@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes that are interfaces should have name matching '.*Interface'' was violated (2 times):
+Item <layered_app::service::ServiceInterface> has name matching '.*Interface' in (src/service/mod.rs:8)
+Item <layered_app::service::internal::SomeInternalInterface> has name matching '.*Interface' in (src/service/internal.rs:4)

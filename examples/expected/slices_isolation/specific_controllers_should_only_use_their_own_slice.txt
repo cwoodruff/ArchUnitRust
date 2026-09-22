@@ -1,0 +1,4 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'Controllers one and two should not depend on each other' was violated (1 times):
+Controller one depends on Controller two:
+Method <layered_app::controller::one::UseCaseOneTwoController::use_case_one()> calls constructor <layered_app::controller::two::UseCaseTwoController::new()> in (src/controller/one.rs:7)
+Method <layered_app::controller::one::UseCaseOneTwoController::use_case_one()> calls method <layered_app::controller::two::UseCaseTwoController::use_case_two()> in (src/controller/one.rs:7)

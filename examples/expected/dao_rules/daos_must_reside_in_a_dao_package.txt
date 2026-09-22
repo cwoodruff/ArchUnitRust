@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'DAOs should reside in a package '..dao..'' was violated (1 times):
+Item <layered_app::persistence::second::InWrongPackageDao> does not reside in a package '..dao..' in (src/persistence/second/mod.rs:5)

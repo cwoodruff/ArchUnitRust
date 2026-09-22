@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'Entities should reside in a package '..domain..'' was violated (1 times):
+Item <layered_app::persistence::second::WronglyPlacedEntity> does not reside in a package '..domain..' in (src/persistence/second/mod.rs:17)

@@ -1,0 +1,4 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes that reside in a package '..persistence..' should depend on classes that reside in a package '..service..'' was violated (3 times):
+Field <layered_app::persistence::layerviolation::DaoCallingService::service> has type <layered_app::service::ServiceOne> in (src/persistence/layerviolation.rs:5)
+Item <layered_app::persistence::layerviolation::DaoCallingService> implements trait <layered_app::service::ServiceInterface> in (src/persistence/layerviolation.rs:4)
+Method <layered_app::persistence::layerviolation::DaoCallingService::serve()> calls method <layered_app::service::ServiceOne::serve()> in (src/persistence/layerviolation.rs:10)

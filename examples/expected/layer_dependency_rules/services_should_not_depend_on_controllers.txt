@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes that reside in a package '..service..' should depend on classes that reside in a package '..controller..'' was violated (2 times):
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_controller()> calls constructor <layered_app::controller::SomeGuiController> in (src/service/mod.rs:58)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_controller()> calls method <layered_app::controller::SomeGuiController::handle()> in (src/service/mod.rs:59)

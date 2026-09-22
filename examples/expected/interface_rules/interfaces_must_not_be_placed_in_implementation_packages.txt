@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes that reside in a package '..internal..' should be interfaces' was violated (1 times):
+Item <layered_app::service::internal::SomeInternalInterface> is an interface in (src/service/internal.rs:4)

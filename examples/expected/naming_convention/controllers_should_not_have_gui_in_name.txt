@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..controller..' should have simple name not containing 'Gui'' was violated (1 times):
+Item <layered_app::controller::SomeGuiController> has simple name containing 'Gui' in (src/controller/mod.rs:44)

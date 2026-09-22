@@ -1,0 +1,17 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'Layered architecture considering all dependencies, consisting of
+layer 'Controllers' ('layered_app::controller..')
+layer 'Services' ('layered_app::service..')
+layer 'Persistence' ('layered_app::persistence..')
+where layer 'Controllers' may not be accessed by any layer
+where layer 'Services' may only be accessed by layers ['Controllers']
+where layer 'Persistence' may only be accessed by layers ['Services']' was violated (10 times):
+Field <layered_app::persistence::layerviolation::DaoCallingService::service> has type <layered_app::service::ServiceOne> in (src/persistence/layerviolation.rs:5)
+Item <layered_app::persistence::layerviolation::DaoCallingService> implements trait <layered_app::service::ServiceInterface> in (src/persistence/layerviolation.rs:4)
+Method <layered_app::persistence::layerviolation::DaoCallingService::serve()> calls method <layered_app::service::ServiceOne::serve()> in (src/persistence/layerviolation.rs:10)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_controller()> calls constructor <layered_app::controller::SomeGuiController> in (src/service/mod.rs:58)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_controller()> calls method <layered_app::controller::SomeGuiController::handle()> in (src/service/mod.rs:59)
+Module <layered_app::controller> imports <layered_app::persistence::first::dao::SomeDao> in (src/controller/mod.rs:7)
+Module <layered_app::persistence::layerviolation> imports <layered_app::service::ServiceInterface> in (src/persistence/layerviolation.rs:1)
+Module <layered_app::persistence::layerviolation> imports <layered_app::service::ServiceOne> in (src/persistence/layerviolation.rs:1)
+Module <layered_app::service> imports <layered_app::controller::AbstractController> in (src/service/mod.rs:3)
+Module <layered_app::service> imports <layered_app::controller::SomeGuiController> in (src/service/mod.rs:3)

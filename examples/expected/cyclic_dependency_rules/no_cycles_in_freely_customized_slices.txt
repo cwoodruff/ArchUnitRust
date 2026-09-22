@@ -1,0 +1,11 @@
+Architecture Violation [Priority: HIGH] - Rule 'slices assigned from complex slice one or two should be free of cycles' was violated (1 times):
+Cycle detected: Complex-Cycle[One] -> 
+                Complex-Cycle[Two] -> 
+                Complex-Cycle[One]
+  1. Dependencies of Complex-Cycle[One]
+    - Method <cyclic_app::complexcycles::slice1::ClassOfMinimalCycleCallingSliceTwo::call(&SliceTwoInheritingFromSliceOne)> calls method <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne::method()> in (src/complexcycles/slice1.rs:19)
+    - Method <cyclic_app::complexcycles::slice1::ClassOfMinimalCycleCallingSliceTwo::call(&SliceTwoInheritingFromSliceOne)> has parameter of type <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne> in (src/complexcycles/slice1.rs:18)
+    - Method <cyclic_app::complexcycles::slice1::SliceOneCallingConstructorInSliceTwoAndMethodInSliceThree::call()> calls constructor <cyclic_app::complexcycles::slice2::InstantiatedClassInSliceTwo::new()> in (src/complexcycles/slice1.rs:8)
+  2. Dependencies of Complex-Cycle[Two]
+    - Item <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne> implements trait <cyclic_app::complexcycles::slice1::TraitBeingImplementedInSliceTwo> in (src/complexcycles/slice2.rs:18)
+    - Method <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne::method()> calls constructor <cyclic_app::complexcycles::slice1::ClassOfMinimalCycleCallingSliceTwo> in (src/complexcycles/slice2.rs:24)

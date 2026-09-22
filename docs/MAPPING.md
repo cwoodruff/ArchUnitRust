@@ -706,16 +706,33 @@ named `harness`; every annotation keeps its ArchUnit name.
 
 | Java test class | Rust port | Status |
 |---|---|---|
-| `LayeredArchitectureTest`, `LayerDependencyRulesTest`, `NamingConventionTest`, `ControllerRulesTest`, `DaoRulesTest`, `MethodsTest`, `InterfaceRulesTest`, `SingleClassTest`, `RestrictNumberOfClassesWithACertainPropertyTest`, `SlicesIsolationTest` | rules against `tests/fixtures/layered_app` | P6 |
-| `OnionArchitectureTest` (package and annotation variants) | `tests/fixtures/onion_app` (attribute variant via outer attributes on items) | P6 |
-| `CyclicDependencyRulesTest` (simple, constructor, inheritance, field access, member, simple scenario, complex, custom ignore, custom assignment) | `tests/fixtures/cyclic_app` | P6 |
-| `CodingRulesTest`, `DependencyRulesTest`, `ProxyRulesTest` | `tests/fixtures/coding_rules_app` | P6 |
-| `FrozenRulesTest` | frozen store under `examples/frozen/` | P6 |
-| `PlantUmlArchitectureTest` (`shopping_example.puml`) | `tests/fixtures/shopping_app` + `examples/shopping_example.puml` | P6 |
+| `LayeredArchitectureTest` | `examples/layered_architecture.rs` against `tests/fixtures/layered_app` | done |
+| `LayerDependencyRulesTest` | `examples/layer_dependency_rules.rs` | done |
+| `NamingConventionTest` | `examples/naming_convention.rs` | done |
+| `ControllerRulesTest` | `examples/controller_rules.rs` | done |
+| `DaoRulesTest` | `examples/dao_rules.rs` (`SQLException` → `layered_app::thirdparty::SqlError`) | done |
+| `MethodsTest` | `examples/methods.rs` | done |
+| `InterfaceRulesTest` | `examples/interface_rules.rs` | done |
+| `SingleClassTest` | `examples/single_class.rs` | done |
+| `RestrictNumberOfClassesWithACertainPropertyTest` | `examples/restrict_number_of_classes.rs` | done |
+| `SlicesIsolationTest` | `examples/slices_isolation.rs` | done |
+| `OnionArchitectureTest` (package and annotation variants) | `examples/onion_architecture.rs` against `tests/fixtures/onion_app`; the attribute variant ignores dependencies of module items (see Phase 3 notes) | done |
+| `CyclicDependencyRulesTest` (simple, constructor, inheritance, field access, member, simple scenario, complex, custom ignore, custom assignment) | `examples/cyclic_dependency_rules.rs` against `tests/fixtures/cyclic_app` | done |
+| `CodingRulesTest`, `DependencyRulesTest`, `ProxyRulesTest` | `examples/coding_rules.rs` against `tests/fixtures/coding_app` (plus the rust-only rules); the logging, JodaTime and field-injection rules are unsupported (§5.4) | done |
+| `FrozenRulesTest` | `examples/frozen_rules.rs` with the frozen store committed under `examples/frozen/` (creation and update disabled at test time) | done |
+| `PlantUmlArchitectureTest` (`shopping_example.puml`) | `examples/plantuml_architecture.rs` with `tests/fixtures/plantuml/layered_app.puml`: the same three configurations against `layered_app` instead of a separate shopping fixture | partial |
+| `ThirdPartyRulesTest` | `examples/third_party_rules.rs` (custom `ArchCondition` with `never(call_code_unit_where(..))`) | done |
+| `SecurityTest` | `examples/security.rs` (`only_be_accessed().by_any_package(..)` on the `security` module; no `java.security` equivalent to import) | partial |
+| `SessionBeanRulesTest` | — | unsupported: no EJB session beans in Rust |
 | `ModulesTest` | — | deferred with §5.3 |
-| `SecurityTest`, `SessionBeanRulesTest`, `ThirdPartyRulesTest` | ported where the concept exists (third-party access restriction yes; EJB session beans no) | P6 partial |
-| `ArchUnitExampleJUnit5ArchitectureTest` (`@AnalyzeClasses` + `ArchTests.in`) | `examples/architecture_test.rs` using `#[analyze_classes]` and `arch_tests!` | P6 |
+| `ArchUnitExampleJUnit5ArchitectureTest`, `RuleSetsTest`, `RuleLibraryTest` (`@AnalyzeClasses` + `ArchTests.in`) | `examples/architecture_test.rs` using `#[analyze_classes]`, `#[arch_rules]` and `ArchTests::in_(..)` | done |
 | `extension` example (`ArchUnitExtension`) | — | deferred |
+
+Every example declares `main()` (prints the reports, `cargo run --example <name>`) and one
+test per rule (`cargo test --examples`) through `archunit_example!` in `examples/common`; the
+expected report of each rule lives in `examples/expected/<example>/<rule>.txt`, with
+`<no violations>` for rules the fixture satisfies. `UPDATE_EXPECTED=1 cargo test --examples`
+regenerates them.
 
 ---
 
@@ -860,6 +877,21 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
   `next` (the freeze line matcher). Unique-name resolution now skips the method names of
   `std` prelude traits and common `std` types (PLAN.md §4).
 
+### Phase 6
+
+* **Examples are tests that pass.** ArchUnit's example rules fail on purpose; here each rule
+  is compared against its expected report instead, so `cargo test --examples` stays green
+  while `cargo run --example <name>` shows the ArchUnit-style output.
+* **The frozen store is committed.** `examples/frozen/` was created once with
+  `ARCHUNIT_FREEZE_STORE_DEFAULT_ALLOW_STORE_CREATION=true cargo run --example frozen_rules`;
+  the example disables store creation and update, so a changed fixture surfaces as a failure
+  instead of a silently rewritten store.
+* **The prelude now re-exports the library entry points** (`layered_architecture`,
+  `onion_architecture`, `slices`, `freeze`, `adhere_to_plant_uml_diagram`, `Architectures`,
+  `FreezingArchRule`, `SlicesRuleDefinition`); the Phase 3 and 5 edits meant to add them had
+  not applied.
+* README shows the Java and Rust forms side by side and links here for every difference.
+
 ## 10. Phase status log
 
 | Phase | Status | Summary |
@@ -870,4 +902,4 @@ Approximations and limits established in Phase 1 (all documented in rustdoc as w
 | 3 | done | `library::architectures` (layered + onion), `library::dependencies` (slices, `be_free_of_cycles`, `not_depend_on_each_other`, `ignore_dependency`), `library::cycle_detection` (Johnson/Tarjan port, `CycleArchCondition`), cycle configuration properties; 24 library tests incl. golden reports for layered, onion, simple cycle, simple scenario and controller slices |
 | 4 | done | `archunit-macros` (`#[analyze_classes]`, `#[arch_test]`, `#[arch_rules]`, `#[arch_ignore]`, `#[arch_tag]`), `archunit::harness` (`analyze_classes()` builder, `CacheMode`, `LocationProvider`, `ArchTests`, cache), `archunit.toml` + `ARCHUNIT_*` overrides with importer settings; 11 harness tests (macro-generated) + 5 config tests |
 | 5 | done | `library::general_coding_rules` (standard streams, generic exceptions, assertions, deprecated API + rust-only unwrap/panic/process-exit/unsafe), `dependency_rules`, `proxy_rules`, `library::plantuml` (parser + `adhere_to_plant_uml_diagram`), `library::freeze` (`FreezingArchRule`, `TextFileBasedViolationStore` in Java's format, fuzzy line matcher); fixture `coding_app` and diagram `plantuml/layered_app.puml`; 8 coding-rule, 7 PlantUML and 15 freeze tests with 11 golden reports |
-| 6 | pending | |
+| 6 | done | 18 example programs porting `archunit-example` (60 rules with expected reports under `examples/expected/`, frozen store under `examples/frozen/`), `#[analyze_classes]` harness example, README with Java/Rust side by side |

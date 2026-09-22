@@ -1,0 +1,17 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'Onion architecture consisting of
+domain models ('..domain.model..')
+domain services ('..domain.service..')
+application services ('..application..')
+adapter 'cli' ('..adapter.cli..')
+adapter 'persistence' ('..adapter.persistence..')
+adapter 'rest' ('..adapter.rest..')' was violated (10 times):
+Method <onion_app::adapter::cli::AdministrationCli::refresh_ui(&ShoppingController)> calls method <onion_app::adapter::rest::ShoppingController::refresh()> in (src/adapter/cli/mod.rs:17)
+Method <onion_app::adapter::cli::AdministrationCli::refresh_ui(&ShoppingController)> has parameter of type <onion_app::adapter::rest::ShoppingController> in (src/adapter/cli/mod.rs:16)
+Method <onion_app::application::ApplicationConfiguration::start_cli()> calls constructor <onion_app::adapter::cli::AdministrationCli> in (src/application/mod.rs:20)
+Method <onion_app::application::ApplicationConfiguration::start_cli()> has return type <onion_app::adapter::cli::AdministrationCli> in (src/application/mod.rs:19)
+Method <onion_app::domain::service::shopping::ShoppingService::notify(&ShoppingController)> calls method <onion_app::adapter::rest::ShoppingController::refresh()> in (src/domain/service/shopping.rs:40)
+Method <onion_app::domain::service::shopping::ShoppingService::notify(&ShoppingController)> has parameter of type <onion_app::adapter::rest::ShoppingController> in (src/domain/service/shopping.rs:39)
+Module <onion_app::adapter::cli> imports <onion_app::adapter::rest::ShoppingController> in (src/adapter/cli/mod.rs:3)
+Module <onion_app::application> imports <onion_app::adapter::cli::AdministrationCli> in (src/application/mod.rs:3)
+Module <onion_app::domain::model::order> imports <onion_app::domain::service::shopping::OrderRepository> in (src/domain/model/order.rs:4)
+Module <onion_app::domain::service::shopping> imports <onion_app::adapter::rest::ShoppingController> in (src/domain/service/shopping.rs:3)

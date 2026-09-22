@@ -1,0 +1,11 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'Slices of complex scenario ignoring some violations should be free of cycles' was violated (1 times):
+Cycle detected: slice1 of complexcycles -> 
+                slice2 of complexcycles -> 
+                slice1 of complexcycles
+  1. Dependencies of slice1 of complexcycles
+    - Method <cyclic_app::complexcycles::slice1::ClassOfMinimalCycleCallingSliceTwo::call(&SliceTwoInheritingFromSliceOne)> calls method <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne::method()> in (src/complexcycles/slice1.rs:19)
+    - Method <cyclic_app::complexcycles::slice1::ClassOfMinimalCycleCallingSliceTwo::call(&SliceTwoInheritingFromSliceOne)> has parameter of type <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne> in (src/complexcycles/slice1.rs:18)
+    - Method <cyclic_app::complexcycles::slice1::SliceOneCallingConstructorInSliceTwoAndMethodInSliceThree::call()> calls constructor <cyclic_app::complexcycles::slice2::InstantiatedClassInSliceTwo::new()> in (src/complexcycles/slice1.rs:8)
+  2. Dependencies of slice2 of complexcycles
+    - Item <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne> implements trait <cyclic_app::complexcycles::slice1::TraitBeingImplementedInSliceTwo> in (src/complexcycles/slice2.rs:18)
+    - Method <cyclic_app::complexcycles::slice2::SliceTwoInheritingFromSliceOne::method()> calls constructor <cyclic_app::complexcycles::slice1::ClassOfMinimalCycleCallingSliceTwo> in (src/complexcycles/slice2.rs:24)

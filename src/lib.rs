@@ -37,4 +37,8 @@ pub mod prelude {
     pub use crate::lang::{
         ArchCondition, ArchRule, ConditionEvents, EvaluationResult, Priority, SimpleConditionEvent,
     };
+    pub use crate::library::{
+        Architectures, FreezingArchRule, SlicesRuleDefinition, adhere_to_plant_uml_diagram, freeze,
+        layered_architecture, onion_architecture, slices,
+    };
 }

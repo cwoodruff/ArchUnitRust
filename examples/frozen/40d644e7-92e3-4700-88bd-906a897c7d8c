@@ -1,0 +1,8 @@
+Field <layered_app::persistence::first::dao::SomeDao::entity_manager> has type <layered_app::thirdparty::EntityManager> in (src/persistence/first/dao/mod.rs:9)
+Field <layered_app::persistence::first::dao::jpa::JpaDao::manager> has type <layered_app::thirdparty::EntityManager> in (src/persistence/first/dao/jpa.rs:4)
+Field <layered_app::persistence::second::InWrongPackageDao::manager> has type <layered_app::thirdparty::EntityManager> in (src/persistence/second/mod.rs:6)
+Function <layered_app::thirdparty::free_function_in_thirdparty()> calls constructor <layered_app::thirdparty::EntityManager> in (src/thirdparty.rs:18)
+Function <layered_app::thirdparty::free_function_in_thirdparty()> has return type <layered_app::thirdparty::EntityManager> in (src/thirdparty.rs:17)
+Method <layered_app::persistence::first::dao::SomeDao::find_all()> calls method <layered_app::thirdparty::EntityManager::find_all()> in (src/persistence/first/dao/mod.rs:14)
+Method <layered_app::persistence::first::dao::SomeDao::store(PersistentObject)> calls method <layered_app::thirdparty::EntityManager::persist(T)> in (src/persistence/first/dao/mod.rs:18)
+Method <layered_app::persistence::second::InWrongPackageDao::manager()> has return type <layered_app::thirdparty::EntityManager> in (src/persistence/second/mod.rs:10)

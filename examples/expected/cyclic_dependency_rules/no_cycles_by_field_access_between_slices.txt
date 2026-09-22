@@ -1,0 +1,10 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'slices matching '..(fieldaccesscycle).(*)..' should be free of cycles' was violated (1 times):
+Cycle detected: slice1 of fieldaccesscycle -> 
+                slice2 of fieldaccesscycle -> 
+                slice1 of fieldaccesscycle
+  1. Dependencies of slice1 of fieldaccesscycle
+    - Method <cyclic_app::fieldaccesscycle::slice1::SliceOneAccessingFieldInSliceTwo::access(&mut SliceTwoAccessingFieldInSliceOne)> has parameter of type <cyclic_app::fieldaccesscycle::slice2::SliceTwoAccessingFieldInSliceOne> in (src/fieldaccesscycle/slice1.rs:8)
+    - Method <cyclic_app::fieldaccesscycle::slice1::SliceOneAccessingFieldInSliceTwo::access(&mut SliceTwoAccessingFieldInSliceOne)> sets field <cyclic_app::fieldaccesscycle::slice2::SliceTwoAccessingFieldInSliceOne::field_two> in (src/fieldaccesscycle/slice1.rs:9)
+  2. Dependencies of slice2 of fieldaccesscycle
+    - Method <cyclic_app::fieldaccesscycle::slice2::SliceTwoAccessingFieldInSliceOne::access(&SliceOneAccessingFieldInSliceTwo)> gets field <cyclic_app::fieldaccesscycle::slice1::SliceOneAccessingFieldInSliceTwo::field_one> in (src/fieldaccesscycle/slice2.rs:9)
+    - Method <cyclic_app::fieldaccesscycle::slice2::SliceTwoAccessingFieldInSliceOne::access(&SliceOneAccessingFieldInSliceTwo)> has parameter of type <cyclic_app::fieldaccesscycle::slice1::SliceOneAccessingFieldInSliceTwo> in (src/fieldaccesscycle/slice2.rs:8)

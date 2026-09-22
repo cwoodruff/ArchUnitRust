@@ -11,7 +11,7 @@ documentation after a name translation.
 cargo fmt --all
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
-cargo test --examples          # Phase 6 onward
+cargo test --examples          # the ported archunit-example rules (UPDATE_EXPECTED=1 regenerates examples/expected)
 ```
 
 All three must pass before every commit. Stable Rust only, edition 2024.
@@ -35,6 +35,9 @@ See `docs/PLAN.md` §1 for the full tree. Short form:
 * `src/harness` – test integration and import cache; `archunit-macros/` holds the proc macros.
 * `src/config.rs` – `ArchConfiguration`, `archunit.toml`, `ARCHUNIT_*` env overrides,
   `archunit_ignore_patterns.txt`.
+* `examples/` – one program per ported `archunit-example` test class; `examples/common/mod.rs`
+  holds the `archunit_example!` macro (a `main()` plus one test per rule), expected reports
+  live in `examples/expected/<example>/<rule>.txt`, the frozen store in `examples/frozen/`.
 
 ## Conventions (do not deviate without updating docs/MAPPING.md)
 

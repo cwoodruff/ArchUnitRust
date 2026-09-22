@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes should not instantiate EntityManager and its subclasses, but instead use SomeDao' was violated (1 times):
+Function <layered_app::thirdparty::free_function_in_thirdparty()> calls constructor <layered_app::thirdparty::EntityManager> in (src/thirdparty.rs:18)

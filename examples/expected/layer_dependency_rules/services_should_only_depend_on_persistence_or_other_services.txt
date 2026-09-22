@@ -1,0 +1,8 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..service..' should only depend on classes that reside in any package ['..service..', '..persistence..', 'std..', 'core..']' was violated (7 times):
+Item <layered_app::service::BadlyNamedService> is annotated with <fixture_macros::my_service> in (src/service/mod.rs:49)
+Item <layered_app::service::ServiceOne> is annotated with <fixture_macros::my_service> in (src/service/mod.rs:12)
+Method <layered_app::service::ServiceOne::serve()> is annotated with <fixture_macros::secured> in (src/service/mod.rs:24)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_controller()> calls constructor <layered_app::controller::SomeGuiController> in (src/service/mod.rs:58)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_controller()> calls method <layered_app::controller::SomeGuiController::handle()> in (src/service/mod.rs:59)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_core()> calls constructor <layered_app::core::VeryCentralCore> in (src/service/mod.rs:63)
+Method <layered_app::service::ServiceViolatingLayerRules::illegal_access_to_core()> calls method <layered_app::core::VeryCentralCore::do_core_stuff()> in (src/service/mod.rs:63)

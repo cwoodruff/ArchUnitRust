@@ -1,0 +1,5 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes should depend on upper packages, because that might prevent packages on that level from being split into separate artifacts in a clean way' was violated (4 times):
+Field <coding_app::upper::lower::Lower::0> has type <coding_app::upper::Top> in (src/upper/lower.rs:4)
+Function <coding_app::unwraps::tests::unwrap_in_tests_is_fine()> calls constructor <coding_app::unwraps::Parser> in (src/unwraps.rs:28)
+Function <coding_app::unwraps::tests::unwrap_in_tests_is_fine()> calls method <coding_app::unwraps::Parser::parse_unwrapped(&str)> in (src/unwraps.rs:28)
+Method <coding_app::upper::lower::Lower::uses_parent()> calls method <coding_app::upper::top_level()> in (src/upper/lower.rs:14)

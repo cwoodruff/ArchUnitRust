@@ -1,0 +1,3 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'classes should adhere to PlantUML diagram <layered_app.puml> while ignoring dependencies outside of packages ['..persistence..']' was violated (2 times):
+Method <layered_app::controller::SomeController::bypass_layers()> calls constructor <layered_app::persistence::first::dao::SomeDao::default()> in (src/controller/mod.rs:32)
+Method <layered_app::controller::SomeController::bypass_layers()> calls method <layered_app::persistence::first::dao::SomeDao::find_all()> in (src/controller/mod.rs:33)

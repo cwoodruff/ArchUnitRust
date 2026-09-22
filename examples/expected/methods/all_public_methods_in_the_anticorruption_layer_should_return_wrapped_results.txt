@@ -1,0 +1,2 @@
+Architecture Violation [Priority: MEDIUM] - Rule 'methods that are declared in classes that reside in a package '..anticorruption..' and are public should have raw return type layered_app::anticorruption::internal::WrappedResult, because we do not want to couple the client code directly to the return types of the encapsulated module' was violated (1 times):
+Method <layered_app::anticorruption::Facade::unwrapped()> does not have raw return type layered_app::anticorruption::internal::WrappedResult in (src/anticorruption/mod.rs:13)
